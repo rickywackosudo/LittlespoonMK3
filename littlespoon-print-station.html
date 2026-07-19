@@ -196,8 +196,15 @@ async function loadOrders() {
 
   try {
     // doGet Apps Script bisa dibaca langsung (GET tidak kena masalah CORS
-    // seperti POST, karena Apps Script mengizinkan respons JSON untuk GET)
-    const res = await fetch(url + '?action=orderTags&tanggal=' + encodeURIComponent(tanggalSheet));
+    // seperti POST, karena Apps Script mengizinkan respons JSON untuk GET).
+    // cache: 'no-store' + parameter _ts (timestamp) MEMAKSA fetch selalu ke
+    // server, bukan mengambil dari cache Safari — tanpa ini, Safari/iPhone
+    // bisa menyajikan response GET lama yang tersimpan (order kosong)
+    // walau data sudah bertambah di sheet.
+    const res = await fetch(
+      url + '?action=orderTags&tanggal=' + encodeURIComponent(tanggalSheet) + '&_ts=' + Date.now(),
+      { cache: 'no-store' }
+    );
     const data = await res.json();
 
     if (data.status !== 'ok') throw new Error(data.message || 'Server balas error');
