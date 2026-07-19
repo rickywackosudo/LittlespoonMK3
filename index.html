@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POS — Little Spoon</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #FAF6F0;
+    --warm-white: #FFFDF9;
+    --brown: #3B2A1A;
+    --terracotta: #C05E3A;
+    --sage: #7A8C6E;
+    --gold: #C9973A;
+    --border: #E8DDD0;
+    --muted: #9B8B7A;
+    --paid-bg: #F0F7F0;
+    --paid: #4A7A4A;
+    --free-bg: #FFF3EE;
+    --free: #C05E3A;
+  }
+
+  body {
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--brown);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--brown);
+    color: var(--cream);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+  }
+
+  header .date-display {
+    font-size: 13px;
+    color: #C9B9A6;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    height: calc(100vh - 58px);
+  }
+
+  /* LEFT: Product Panel */
+  .products-panel {
+    overflow-y: auto;
+    padding: 20px;
+    border-right: 1px solid var(--border);
+    background: var(--warm-white);
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+
+  .section-title:first-child { margin-top: 0; }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .product-card {
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .product-card:hover {
+    border-color: var(--terracotta);
+    background: #FFF8F5;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(192,94,58,0.1);
+  }
+
+  .product-card:active { transform: translateY(0); }
+
+  .product-card .name {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+
+  .product-card .price {
+    font-size: 12px;
+    color: var(--terracotta);
+    font-weight: 500;
+  }
+
+  .product-card .bundle-note {
+    font-size: 10px;
+    color: var(--sage);
+    margin-top: 3px;
+  }
+
+  /* RIGHT: Order Panel */
+  .order-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--warm-white);
+    overflow: hidden;
+  }
+
+  .order-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-header h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .input-row input, .input-row select {
+    border: 1.5px solid var(--border);
+    background: var(--cream);
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--brown);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-row input:focus, .input-row select:focus {
+    border-color: var(--terracotta);
+  }
+
+  .input-row input[name="customer"] { flex: 1; min-width: 120px; }
+
+  .kategori-toggle {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+
+  .kategori-toggle button {
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    background: var(--cream);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .kategori-toggle button.active-paid {
+    background: var(--paid-bg);
+    color: var(--paid);
+  }
+
+  .kategori-toggle button.active-free {
+    background: var(--free-bg);
+    color: var(--free);
+  }
+
+  .order-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 20px;
+  }
+
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .order-item:last-child { border-bottom: none; }
+
+  .order-item .item-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .order-item .item-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .qty-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .qty-ctrl button {
+    width: 26px; height: 26px;
+    border: 1.5px solid var(--border);
+    background: var(--cream);
+    border-radius: 6px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s;
+  }
+
+  .qty-ctrl button:hover { border-color: var(--terracotta); color: var(--terracotta); }
+
+  .qty-ctrl span {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .item-total {
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 70px;
+    text-align: right;
+    color: var(--terracotta);
+  }
+
+  .btn-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #CCC;
+    font-size: 16px;
+    transition: color 0.12s;
+    padding: 2px;
+  }
+  .btn-remove:hover { color: var(--terracotta); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Cashier Login Modal */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(59,42,26,0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .login-card {
+    background: var(--warm-white);
+    border-radius: 16px;
+    padding: 32px;
+    width: 320px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(59,42,26,0.25);
+  }
+
+  .login-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+    color: var(--brown);
+  }
+
+  .login-card p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .login-card input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    background: var(--cream);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+
+  .login-card input:focus { border-color: var(--terracotta); }
+
+  .login-card button {
+    width: 100%;
+    padding: 11px;
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .login-card button:hover { background: #A84E2E; }
+
+  .cashier-badge {
+    font-size: 11px;
+    color: #C9B9A6;
+    cursor: pointer;
+  }
+
+  .cashier-badge:hover { color: var(--gold); }
+
+  .order-footer {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+  }
+
+  .totals {
+    margin-bottom: 12px;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 3px 0;
+    color: var(--muted);
+  }
+
+  .total-row.grand {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--brown);
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+
+  .btn-add-order {
+    width: 100%;
+    padding: 12px;
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-add-order:hover { background: #A84E2E; }
+  .btn-add-order:disabled { background: #CCC; cursor: not-allowed; }
+
+  /* Daily Summary */
+  .summary-bar {
+    background: var(--brown);
+    color: var(--cream);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+  }
+
+  .summary-bar .omzet {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--gold);
+  }
+
+  /* Log Panel (bottom) */
+  .log-section {
+    background: var(--warm-white);
+    border-top: 2px solid var(--border);
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 12px 20px;
+  }
+
+  .log-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .log-title button {
+    font-size: 11px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.12s;
+  }
+
+  .log-title button:hover { border-color: var(--terracotta); color: var(--terracotta); }
+
+  .log-entry {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .log-entry .log-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .log-entry .customer-name {
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .log-entry .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .badge-paid { background: var(--paid-bg); color: var(--paid); }
+  .badge-free { background: var(--free-bg); color: var(--free); }
+
+  .log-entry .log-items { color: var(--muted); line-height: 1.6; }
+
+  .log-entry .log-total {
+    font-weight: 700;
+    color: var(--terracotta);
+    margin-top: 4px;
+  }
+
+  .log-entry .btn-delete-log {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #CCC;
+    font-size: 14px;
+    float: right;
+    transition: color 0.12s;
+  }
+
+  .log-entry .btn-delete-log:hover { color: var(--terracotta); }
+
+  .export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--sage);
+    color: white;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .export-btn:hover { background: #5E6E52; }
+
+  .full-width-log {
+    grid-column: 1 / -1;
+  }
+
+  /* Notification */
+  .notif {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    background: var(--brown);
+    color: var(--cream);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .notif.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 700px) {
+    .layout {
+      grid-template-columns: 1fr;
+      height: auto;
+      position: relative;
+    }
+
+    .mobile-tabs {
+      display: flex;
+      background: var(--warm-white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .mobile-tabs button {
+      flex: 1;
+      padding: 12px;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 2.5px solid transparent;
+      cursor: pointer;
+    }
+
+    .mobile-tabs button.active {
+      color: var(--terracotta);
+      border-bottom-color: var(--terracotta);
+    }
+
+    .mobile-tabs .cart-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      background: var(--terracotta);
+      color: white;
+      border-radius: 10px;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    .products-panel {
+      border-right: none;
+      max-height: none;
+      display: none;
+    }
+    .products-panel.mobile-active { display: block; }
+
+    .order-panel {
+      display: none;
+    }
+    .order-panel.mobile-active { display: flex; }
+
+    header {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 14px 16px;
+    }
+
+    header h1 { font-size: 17px; }
+  }
+
+  @media (min-width: 701px) {
+    .mobile-tabs { display: none; }
+  }
+/* ── PRINT ORDER TAG (thermal 58mm) ─────────────────────────── */
+#printArea { display: none; }
+
+@media print {
+  /* Sembunyikan seluruh aplikasi, tampilkan hanya area tag */
+  body > *:not(#printArea) { display: none !important; }
+  #printArea { display: block !important; }
+
+  @page {
+    size: 58mm auto;   /* lebar kertas thermal; panjang mengikuti isi */
+    margin: 0;
+  }
+
+  .print-tag {
+    width: 48mm;              /* area cetak efektif kertas 58mm */
+    padding: 2mm 1mm 6mm 1mm;
+    font-family: 'Courier New', monospace; /* font monospace tajam di thermal */
+    font-size: 11px;
+    color: #000;
+    page-break-after: always; /* tiap tag = 1 potong kertas */
+  }
+  .print-tag:last-child { page-break-after: auto; }
+
+  .print-tag .pt-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 2mm;
+    margin-bottom: 2mm;
+  }
+  .print-tag .pt-customer {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 1mm;
+    word-wrap: break-word;
+  }
+  .print-tag .pt-meta {
+    font-size: 10px;
+    margin-bottom: 2mm;
+  }
+  .print-tag .pt-items {
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+    padding: 1.5mm 0;
+    margin-bottom: 1.5mm;
+  }
+  .print-tag .pt-item { display: flex; justify-content: space-between; }
+  .print-tag .pt-total { font-weight: bold; text-align: right; }
+  .print-tag .pt-note { font-size: 9px; text-align: center; margin-top: 1mm; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🥐 Little Spoon</h1>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+    <span class="cashier-badge" id="cashierBadge" onclick="switchCashier()"></span>
+    <button onclick="setupScriptUrl()" id="syncStatus" style="background:none;border:none;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:#C9B9A6;">⚙️ Sheets</button>
+  </div>
+</header>
+<div id="dateBar" style="background:var(--cream);border-bottom:1px solid var(--border);padding:6px 16px;font-size:11px;color:var(--muted);text-align:right;" >
+  <span id="headerDate"></span>
+</div>
+
+<div style="display:flex; flex-direction:column; height:calc(100vh - 58px);">
+  <div class="mobile-tabs">
+    <button id="tabProducts" class="active" onclick="switchMobileTab('products')">🥐 Produk</button>
+    <button id="tabOrder" onclick="switchMobileTab('order')">🧾 Order <span class="cart-count" id="cartCount" style="display:none;">0</span></button>
+  </div>
+  <div class="layout" style="flex:1; min-height:0;">
+
+    <!-- PRODUCTS -->
+    <div class="products-panel mobile-active" id="productsPanel">
+      <p class="section-title">🥐 Menu</p>
+      <div class="product-grid" id="grid-menu"></div>
+
+      <p class="section-title">🤝 B2B</p>
+      <div class="product-grid" id="grid-b2b"></div>
+
+      <p class="section-title">📦 Packaging</p>
+      <div class="product-grid" id="grid-packaging"></div>
+    </div>
+
+    <!-- ORDER -->
+    <div class="order-panel" id="orderPanel">
+      <div class="order-header">
+        <h2 id="orderHeaderTitle">Order Baru</h2>
+        <div class="input-row">
+          <input name="customer" id="customerInput" type="text" placeholder="Nama customer…" />
+          <div class="kategori-toggle">
+            <button id="btnPaid" class="active-paid" onclick="setKategori('Paid')">Paid</button>
+            <button id="btnFree" onclick="setKategori('Free')">Free</button>
+          </div>
+        </div>
+        <div class="input-row" style="margin-top:8px;">
+          <label style="font-size:11px;color:var(--muted);white-space:nowrap;">📅 Tgl Pesanan:</label>
+          <input type="date" id="orderDateInput" style="flex:1;" />
+        </div>
+      </div>
+
+      <div class="order-items" id="orderItems">
+        <div class="empty-state">Pilih produk dari panel kiri</div>
+      </div>
+
+      <div class="order-footer">
+        <div class="totals" id="totals"></div>
+        <button class="btn-add-order" id="btnAddOrder" onclick="addOrder()">+ Tambah ke Laporan</button>
+        <button id="btnCancelEdit" onclick="cancelEdit()" style="display:none;width:100%;margin-top:8px;padding:9px;background:none;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;">✕ Batal Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="log-section full-width-log">
+    <div class="log-title">
+      <span>📋 Laporan Hari Ini</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="omzetDisplay" style="color:var(--terracotta);font-weight:700;font-size:13px;"></span>
+        <button onclick="verifySyncStatus(false)" title="Verifikasi status upload ke server">🔄 Cek Status</button>
+        <button onclick="printAllTags()">🖨 Cetak Semua Tag</button>
+        <button onclick="refreshHPP()" title="Muat ulang HPP live dari Inventory">⟳ HPP</button>
+        <button onclick="exportCSV()">⬇ Export CSV</button>
+        <button onclick="clearAll()" style="color:#C05E3A;">🗑 Hapus Semua</button>
+      </div>
+    </div>
+    <div id="logEntries"></div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<!-- Area khusus print: terisi saat tombol 🖨 ditekan, hanya tampil saat print -->
+<div id="printArea"></div>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <h2>🥐 Little Spoon</h2>
+    <p>Masukkan nama kasir untuk mulai</p>
+    <input type="text" id="cashierInput" placeholder="Nama kasir…" onkeydown="if(event.key==='Enter')loginCashier()" />
+    <button onclick="loginCashier()">Mulai Kerja</button>
+  </div>
+</div>
+
+<script>
+// ─── SAFE STORAGE (fallback jika localStorage diblokir, mis. Safari file://) ───
+const safeStorage = {
+  _memory: {},
+  getItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (e) {
+      return this._memory[key] || null;
+    }
+  },
+  setItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch (e) {
+      this._memory[key] = value;
+    }
+  }
+};
+
+// ─── PRODUCT DATA ─────────────────────────────────────────────
+// UPDATE 12 Jul 2026:
+// • Struktur baru 3 grup: menu / b2b / packaging (id lama produk TIDAK
+//   berubah, jadi order lama di localStorage tetap terbaca).
+// • Semua hpp disamakan ke HPP_Produk LSMk3 terbaru (per pcs; produk B2B
+//   dengan yield per batch sudah dibagi yield-nya).
+// • Packaging: harga 0 (tidak dibebankan ke pembeli, biaya tercatat di
+//   Pengeluaran saat pembelian) — isPackaging: true berarti tidak masuk
+//   omzet via calcOrderTotal.
+// Catatan: hpp masih hardcoded — stale lagi kalau HPP_Produk berubah.
+const PRODUCTS = {
+  menu: [
+    {
+      id: 'DC_ORI', name: 'Dubai Chewi Original',
+      basePrice: 35000, hpp: 10303,
+      bundle: { qty: 3, price: 100000 },
+      note: 'Bundling 3 pcs = Rp 100.000'
+    },
+    {
+      id: 'DC_STR', name: 'Dubai Chewi Strawberry',
+      basePrice: 45000, hpp: 11067,
+      bundle: { qty: 2, price: 85000 },
+      note: 'Bundling 2 pcs = Rp 85.000'
+    },
+    { id: 'SB_ORI', name: 'Salt Bread Original',         basePrice: 17000, hpp: 6820 },
+    { id: 'SB_GAR', name: 'Salt Bread Garlic',           basePrice: 19000, hpp: 5848 },
+    { id: 'SB_CHO', name: 'Salt Bread Double Choco',     basePrice: 22000, hpp: 6782 },
+    { id: 'SB_UBE', name: 'Salt Bread Ube',              basePrice: 24000, hpp: 8365 },
+    { id: 'SB_QUA', name: 'Salt Bread Quattro Formaggi', basePrice: 24000, hpp: 8672 },
+    { id: 'SB_COC', name: 'Salt Bread Chili Oil Cheese', basePrice: 25000, hpp: 10263 },
+    { id: 'SB_COI', name: 'Salt Bread Chili Oil',        basePrice: 22000, hpp: 8768 },
+    {
+      id: 'BKH',    name: 'Bolu Ketan Hitam',
+      basePrice: 80000, hpp: 42837,
+    },
+  ],
+  b2b: [
+    {
+      id: 'MT',     name: 'Mousse Tiramisu',
+      basePrice: 35000, hpp: 15742,
+      // Multi-tier: array diurutkan dari qty tertinggi ke terendah.
+      // calcItemPrice akan pilih tier pertama yang qty-nya terpenuhi.
+      tiers: [
+        { qty: 24, price: 27000 },
+        { qty: 10, price: 28000 }
+      ],
+      note: '10 pcs ke atas = Rp 28.000/pcs · 24 pcs ke atas = Rp 27.000/pcs'
+    },
+    // HPP per pcs = HPP batch LSMk3 ÷ yield (Ichigo & Heavenly yield 8, MC & Brownie Biscoe yield 10)
+    { id: 'IMB',    name: 'Ichigo Matcha Biscoe',             basePrice: 38000,  hpp: 14271 },
+    { id: 'HCB',    name: 'Heavenly Choco Biscoe',            basePrice: 38000,  hpp: 13433 },
+    { id: 'BRW',    name: 'Brownie Biscoe',                   basePrice: 19000,  hpp: 15577 },
+    { id: 'MC_BIS', name: 'Mille Crepe Tiramisu Biscoe',      basePrice: 28000,  hpp: 14314 },
+    { id: 'MC_BON', name: 'Mille Crepe Tiramisu Bonfire',     basePrice: 215000, hpp: 145758 },
+    { id: 'MC_KYO', name: 'Mille Crepe Tiramisu Kantor Yoyo', basePrice: 285000, hpp: 160758 },
+    { id: 'MC_SBO', name: 'Mille Crepe Strawberry Bonfire',   basePrice: 218500, hpp: 113719 },
+  ],
+  packaging: [
+    // Harga 0: biaya box tidak dibebankan ke pembeli — sudah tercatat
+    // sebagai Pengeluaran (Bahan Baku) saat pembelian. hpp: 0 supaya
+    // tidak double-count biaya di laporan profit POS.
+    { id: 'BOX20', name: 'Box 20 Salt Bread', basePrice: 0, hpp: 0, isPackaging: true, note: 'Tidak dibebankan ke pembeli' },
+    { id: 'BOX22', name: 'Box 22 Salt Bread', basePrice: 0, hpp: 0, isPackaging: true, note: 'Tidak dibebankan ke pembeli' },
+  ]
+};
+
+// ─── CONFIG ────────────────────────────────────────────────────
+// Setelah deploy Apps Script, paste URL-nya di sini:
+let APPS_SCRIPT_URL = safeStorage.getItem('ls_script_url') || '';
+
+// ─── HPP LIVE DARI INVENTORY (v4 HTML) ─────────────────────────
+// Nilai hpp di PRODUCTS adalah FALLBACK. Saat app dibuka, POS mengambil
+// HPP terbaru dari endpoint Inventory ?action=hppProduk (dihitung live
+// dari Resep BOM × Harga Per Unit Master Bahan), lalu menimpanya di
+// memori + menyimpan cache di localStorage supaya tetap akurat saat
+// offline. Dengan ini, revisi resep/harga bahan di sheet otomatis
+// terpakai di transaksi berikutnya TANPA edit file HTML lagi.
+let INVENTORY_URL = safeStorage.getItem('ls_inv_url') || '';
+
+// Mapping id produk POS → nama produk di sheet Resep BOM
+// (packaging sengaja tidak dipetakan: HPP-nya tetap 0 di POS karena
+// biaya box sudah tercatat di Pengeluaran saat pembelian)
+const BOM_NAME = {
+  DC_ORI: 'Dubai Chewi',
+  DC_STR: 'Dubai Chewi Strawberry',
+  SB_ORI: 'SALT BREAD ORIGINAL',
+  SB_GAR: 'Salt Bread Garlic',
+  SB_CHO: 'SALT BREAD DOUBLE CHOCO',
+  SB_UBE: 'Salt Bread Ube',
+  SB_QUA: 'Salt Bread Quattro Formaggi',
+  SB_COC: 'Salt Bread Chilli Oil Cheese',
+  SB_COI: 'Salt Bread Chilli Oil',
+  BKH:    'Bolu Ketan Hitam 15cm',
+  MT:     'Mouse Tiramisu',
+  IMB:    'Ichigo Matcha Biscoe',
+  HCB:    'Heavenly Choco Biscoe',
+  BRW:    'Brownie Biscoe',
+  MC_BIS: 'Mille Crepe Tiramisu Biscoe',
+  MC_BON: 'Mille Crepe Tiramisu Bonfire',
+  MC_KYO: 'Mille Crepe Tiramisu Kantor Yoyo',
+  MC_SBO: 'Mille Crepe Strawberry Bonfire',
+};
+
+// Terapkan kumpulan HPP (dari server atau cache) ke PRODUCTS di memori
+function applyHPPValues(hppMap) {
+  if (!hppMap) return 0;
+  // index nama BOM (lowercase) → nilai, biar kebal beda kapitalisasi
+  const idx = {};
+  Object.entries(hppMap).forEach(([k, v]) => { idx[String(k).toLowerCase().trim()] = v; });
+  let updated = 0;
+  ['menu', 'b2b'].forEach(cat => {
+    PRODUCTS[cat].forEach(p => {
+      if (p.isPackaging) return;
+      const bomName = BOM_NAME[p.id];
+      if (!bomName) return;
+      const val = idx[bomName.toLowerCase()];
+      if (typeof val === 'number' && val > 0) {
+        const baru = Math.round(val);
+        if (baru !== p.hpp) { p.hpp = baru; updated++; }
+      }
+    });
+  });
+  return updated;
+}
+
+function applyHPPCache() {
+  try {
+    const cache = JSON.parse(safeStorage.getItem('ls_hpp_cache') || 'null');
+    if (cache && cache.hpp) {
+      const n = applyHPPValues(cache.hpp);
+      if (n > 0) console.log(`HPP cache diterapkan (${n} produk, per ${new Date(cache.t).toLocaleString('id-ID')})`);
+    }
+  } catch (e) { /* cache korup → abaikan, pakai fallback hardcode */ }
+}
+
+async function loadHPPLive(tampilkanNotif) {
+  if (!INVENTORY_URL) return;
+  try {
+    const res = await fetch(INVENTORY_URL + '?action=hppProduk');
+    const data = await res.json();
+    if (data && data.status === 'ok' && data.hpp) {
+      const n = applyHPPValues(data.hpp);
+      safeStorage.setItem('ls_hpp_cache', JSON.stringify({ t: Date.now(), hpp: data.hpp }));
+      if (n > 0) showNotif(`✓ HPP live dimuat — ${n} produk diperbarui`);
+      else if (tampilkanNotif) showNotif('✓ HPP live dimuat — semua sudah terbaru');
+      if (data.bahanTanpaHarga && data.bahanTanpaHarga.length > 0) {
+        console.warn('⚠️ Bahan tanpa harga di Master Bahan:', data.bahanTanpaHarga.join(', '));
+      }
+    }
+  } catch (e) {
+    console.warn('Gagal memuat HPP live (pakai cache/fallback):', e);
+    if (tampilkanNotif) showNotif('⚠️ Gagal memuat HPP live — pakai nilai tersimpan');
+  }
+}
+
+function refreshHPP() {
+  if (!INVENTORY_URL) {
+    const url = prompt('Paste URL Apps Script INVENTORY (untuk HPP live):', '');
+    if (!url || !url.startsWith('https://')) return;
+    INVENTORY_URL = url;
+    safeStorage.setItem('ls_inv_url', url);
+  }
+  showNotif('Memuat HPP live…');
+  loadHPPLive(true);
+}
+
+// ─── STATE ─────────────────────────────────────────────────────
+let cart = {}; // { productId: qty }
+let kategori = 'Paid';
+let orders = JSON.parse(safeStorage.getItem('ls_orders_littlespoon') || '[]');
+let cashierName = safeStorage.getItem('ls_cashier_name') || '';
+
+// ─── HELPERS ───────────────────────────────────────────────────
+const fmt = n => 'Rp ' + n.toLocaleString('id-ID');
+
+function getProduct(id) {
+  return [...PRODUCTS.menu, ...PRODUCTS.b2b, ...PRODUCTS.packaging].find(p => p.id === id);
+}
+
+function calcItemPrice(id, qty) {
+  const p = getProduct(id);
+  if (!p) return 0;
+  if (p.tiers) {
+    // Multi-tier per-pcs (mis. Mousse Tiramisu): tiers sudah diurutkan
+    // dari qty tertinggi ke terendah — pakai tier pertama yang qty-nya cukup
+    const tier = p.tiers.find(t => qty >= t.qty);
+    return tier ? qty * tier.price : qty * p.basePrice;
+  }
+  if (p.bundle) {
+    // Mousse Tiramisu lama / produk perPcs tunggal (kalau masih dipakai)
+    if (p.bundle.perPcs) {
+      return qty >= p.bundle.qty
+        ? qty * p.bundle.price
+        : qty * p.basePrice;
+    }
+    // Dubai Chewi: bundling per-paket
+    const bundles = Math.floor(qty / p.bundle.qty);
+    const sisa = qty % p.bundle.qty;
+    return bundles * p.bundle.price + sisa * p.basePrice;
+  }
+  return qty * p.basePrice;
+}
+
+function totalCart() {
+  return Object.entries(cart).reduce((sum, [id, qty]) => sum + calcItemPrice(id, qty), 0);
+}
+
+function totalOmzet() {
+  return orders
+    .filter(o => o.kategori === 'Paid')
+    .reduce((s, o) => s + o.total, 0);
+}
+
+// Total tagihan customer (termasuk bubble wrap)
+// Total omzet (exclude bubble wrap & free)
+function calcOrderTotal(cartObj, kat) {
+  if (kat !== 'Paid') return 0;
+  return Object.entries(cartObj).reduce((sum, [id, qty]) => {
+    const p = getProduct(id);
+    if (!p || p.isPackaging) return sum; // bubble wrap tidak masuk omzet
+    return sum + calcItemPrice(id, qty);
+  }, 0);
+}
+
+function saveOrders() {
+  safeStorage.setItem('ls_orders_littlespoon', JSON.stringify(orders));
+}
+
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── RENDER PRODUCTS ───────────────────────────────────────────
+function renderProducts() {
+  ['menu', 'b2b', 'packaging'].forEach(cat => {
+    const grid = document.getElementById('grid-' + cat);
+    if (!grid) return;
+    grid.innerHTML = '';
+    PRODUCTS[cat].forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      // Label nama yang bersih
+      let displayName = p.name
+        .replace('Dubai Chewi ', 'DC ')
+        .replace('Salt Bread ', 'SB ')
+        .replace('Mille Crepe ', 'MC ');
+      const priceLabel = p.basePrice === 0
+        ? '<span style="color:var(--sage);">Gratis</span>'
+        : fmt(p.basePrice) + '/pcs';
+      card.innerHTML = `
+        <div class="name">${displayName}</div>
+        <div class="price">${priceLabel}${p.isPackaging ? ' <span style="color:var(--sage);font-size:10px;">pkg</span>' : ''}</div>
+        ${p.note ? `<div class="bundle-note">🎁 ${p.note}</div>` : ''}
+      `;
+      card.onclick = () => addToCart(p.id);
+      grid.appendChild(card);
+    });
+  });
+}
+
+// ─── MOBILE TAB SWITCHER ───────────────────────────────────────
+function switchMobileTab(tab) {
+  const isProducts = tab === 'products';
+  document.getElementById('productsPanel').classList.toggle('mobile-active', isProducts);
+  document.getElementById('orderPanel').classList.toggle('mobile-active', !isProducts);
+  document.getElementById('tabProducts').classList.toggle('active', isProducts);
+  document.getElementById('tabOrder').classList.toggle('active', !isProducts);
+}
+
+function updateCartCountBadge() {
+  const badge = document.getElementById('cartCount');
+  if (!badge) return;
+  const count = Object.values(cart).reduce((s, q) => s + q, 0);
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+// ─── CART ──────────────────────────────────────────────────────
+function addToCart(id) {
+  cart[id] = (cart[id] || 0) + 1;
+  renderCart();
+  // Di mobile, langsung pindah ke tab Order biar user lihat hasilnya
+  if (window.innerWidth <= 700) switchMobileTab('order');
+}
+
+function setQty(id, delta) {
+  cart[id] = (cart[id] || 0) + delta;
+  if (cart[id] <= 0) delete cart[id];
+  renderCart();
+}
+
+function removeFromCart(id) {
+  delete cart[id];
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('orderItems');
+  const ids = Object.keys(cart);
+
+  if (ids.length === 0) {
+    container.innerHTML = '<div class="empty-state">Pilih produk dari panel kiri</div>';
+    document.getElementById('totals').innerHTML = '';
+    document.getElementById('btnAddOrder').disabled = true;
+    updateCartCountBadge();
+    return;
+  }
+
+  document.getElementById('btnAddOrder').disabled = false;
+  container.innerHTML = ids.map(id => {
+    const p = getProduct(id);
+    const qty = cart[id];
+    const total = calcItemPrice(id, qty);
+    const unitDesc = p.tiers
+      ? (() => {
+          // Multi-tier per-pcs: tampilkan tier yang sedang aktif untuk qty ini
+          const tier = p.tiers.find(t => qty >= t.qty);
+          return tier
+            ? `${qty} pcs × ${fmt(tier.price)} (harga bundling ${tier.qty}+ pcs)`
+            : `${qty} pcs × ${fmt(p.basePrice)}`;
+        })()
+      : p.bundle
+      ? (() => {
+          if (p.bundle.perPcs) {
+            // Produk perPcs tunggal (legacy, kalau masih ada yg pakai)
+            return qty >= p.bundle.qty
+              ? `${qty} pcs × ${fmt(p.bundle.price)} (harga bundling)`
+              : `${qty} pcs × ${fmt(p.basePrice)}`;
+          }
+          // Dubai Chewi: bundling per-paket
+          const b = Math.floor(qty / p.bundle.qty), s = qty % p.bundle.qty;
+          let parts = [];
+          if (b) parts.push(`${b}×bundle`);
+          if (s) parts.push(`${s}×satuan`);
+          return parts.join(' + ');
+        })()
+      : '';
+    return `
+      <div class="order-item">
+        <div style="flex:1">
+          <div class="item-name">${p.name}</div>
+          ${unitDesc ? `<div class="item-sub">${unitDesc}</div>` : ''}
+        </div>
+        <div class="qty-ctrl">
+          <button onclick="setQty('${id}',-1)">−</button>
+          <span>${qty}</span>
+          <button onclick="setQty('${id}',1)">+</button>
+        </div>
+        <div class="item-total">${fmt(total)}</div>
+        <button class="btn-remove" onclick="removeFromCart('${id}')">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  const grand = totalCart();
+  document.getElementById('totals').innerHTML = `
+    <div class="total-row grand">
+      <span>Total</span>
+      <span>${fmt(grand)}</span>
+    </div>
+  `;
+  updateCartCountBadge();
+}
+
+// ─── KASIR LOGIN ───────────────────────────────────────────────
+function loginCashier() {
+  const name = document.getElementById('cashierInput').value.trim();
+  if (!name) {
+    document.getElementById('cashierInput').focus();
+    return;
+  }
+  cashierName = name;
+  safeStorage.setItem('ls_cashier_name', name);
+  document.getElementById('loginOverlay').style.display = 'none';
+  updateCashierBadge();
+}
+
+function switchCashier() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('cashierInput').value = cashierName;
+  document.getElementById('cashierInput').focus();
+}
+
+function updateCashierBadge() {
+  const el = document.getElementById('cashierBadge');
+  if (el) el.textContent = `👤 Kasir: ${cashierName} (ganti)`;
+}
+
+function checkCashierLogin() {
+  if (cashierName) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    updateCashierBadge();
+  } else {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+}
+
+// ─── KATEGORI ──────────────────────────────────────────────────
+function setKategori(k) {
+  kategori = k;
+  document.getElementById('btnPaid').className = k === 'Paid' ? 'active-paid' : '';
+  document.getElementById('btnFree').className = k === 'Free' ? 'active-free' : '';
+}
+
+// ─── ADD ORDER ─────────────────────────────────────────────────
+let isAddingOrder = false; // guard cegah double-tap bikin order 2x
+let editingOrderId = null; // sedang edit order lama? (null = mode order baru)
+
+async function addOrder() {
+  if (isAddingOrder) return; // sudah diproses, abaikan tap kedua
+  isAddingOrder = true;
+  setTimeout(() => { isAddingOrder = false; }, 800); // lepas guard setelah jeda singkat
+
+  const customer = document.getElementById('customerInput').value.trim() || 'Customer';
+  if (Object.keys(cart).length === 0) return;
+
+  const items = Object.entries(cart).map(([id, qty]) => ({
+    id, qty,
+    name: getProduct(id).name,
+    total: calcItemPrice(id, qty)
+  }));
+
+  const dateInput = document.getElementById('orderDateInput').value; // YYYY-MM-DD
+  const orderDate = dateInput ? formatDateID(dateInput) : new Date().toLocaleDateString('id-ID');
+
+  // Mode EDIT: hapus order lama dulu (server otomatis restore stok bahan
+  // via inventory), lalu buat order BARU dengan ID baru (server deduct
+  // stok lagi). ID baru dipakai karena server men-skip Order ID duplikat.
+  const oldId = editingOrderId;
+  if (oldId) {
+    orders = orders.filter(o => String(o.id) !== String(oldId));
+    deleteOrderFromSheets(oldId);
+  }
+
+  const order = {
+    id: generateTransactionId(),
+    timestamp: new Date().toLocaleString('id-ID'), // jam input tetap waktu sekarang
+    orderDate, // tanggal pesanan (bisa pre-order, diedit user)
+    customer,
+    kategori,
+    items,
+    cashier: cashierName || 'Tidak diketahui',
+    total: calcOrderTotal(cart, kategori), // exclude packaging dari omzet
+    syncStatus: 'pending' // pending → uploaded (diupdate setelah server konfirmasi)
+  };
+
+  orders.push(order);
+  saveOrders();
+
+  cart = {};
+  document.getElementById('customerInput').value = '';
+  renderCart();
+  renderLog();
+
+  if (oldId) {
+    resetEditUI();
+    showNotif(`✓ Order ${customer} diperbarui (${orderDate})`);
+    // Beri jeda supaya server selesai proses delete + restore stok dulu,
+    // baru order versi baru dikirim (deduct stok ulang) — hindari race.
+    setTimeout(() => syncOrderToSheets(order), 1500);
+  } else {
+    showNotif(`✓ Order ${customer} ditambahkan (${orderDate})`);
+    // Auto-sync ke Google Sheets
+    syncOrderToSheets(order);
+  }
+}
+
+// ─── EDIT ORDER ────────────────────────────────────────────────
+function editOrder(id) {
+  const o = orders.find(x => String(x.id) === String(id));
+  if (!o) return;
+  if (Object.keys(cart).length > 0 && !editingOrderId) {
+    if (!confirm('Keranjang saat ini akan diganti dengan isi order tersebut. Lanjutkan?')) return;
+  }
+  cart = {};
+  let adaProdukHilang = false;
+  o.items.forEach(i => {
+    if (getProduct(i.id)) cart[i.id] = i.qty;
+    else adaProdukHilang = true;
+  });
+  if (adaProdukHilang) {
+    showNotif('⚠️ Sebagian item order lama tidak dikenal produk sekarang — cek ulang isi keranjang');
+  }
+  document.getElementById('customerInput').value = o.customer === 'Customer' ? '' : o.customer;
+  setKategori(o.kategori === 'Paid' ? 'Paid' : 'Free');
+  const iso = parseOrderDateToISO(o.orderDate);
+  if (iso) document.getElementById('orderDateInput').value = iso;
+
+  editingOrderId = o.id;
+  document.getElementById('orderHeaderTitle').textContent = `✎ Edit Order — ${o.customer}`;
+  document.getElementById('btnAddOrder').textContent = '💾 Simpan Perubahan';
+  document.getElementById('btnCancelEdit').style.display = 'block';
+  renderCart();
+  if (window.innerWidth <= 700) switchMobileTab('order');
+  showNotif('Mode edit — ubah item lalu tekan Simpan Perubahan');
+}
+
+function cancelEdit() {
+  cart = {};
+  document.getElementById('customerInput').value = '';
+  resetEditUI();
+  renderCart();
+  showNotif('Edit dibatalkan — order asli tidak berubah');
+}
+
+function resetEditUI() {
+  editingOrderId = null;
+  document.getElementById('orderHeaderTitle').textContent = 'Order Baru';
+  document.getElementById('btnAddOrder').textContent = '+ Tambah ke Laporan';
+  document.getElementById('btnCancelEdit').style.display = 'none';
+}
+
+// Parse orderDate tersimpan ('07 Jul 2026' atau '12/7/2026') → 'YYYY-MM-DD'
+function parseOrderDateToISO(str) {
+  if (!str) return '';
+  const s = String(str).trim();
+  const BULAN = { jan:1, feb:2, mar:3, apr:4, mei:5, jun:6, jul:7, agu:8, sep:9, okt:10, nov:11, des:12 };
+  let m = s.match(/^(\d{1,2})\s+([A-Za-z]{3})\w*\s+(\d{4})$/); // '07 Jul 2026'
+  if (m) {
+    const mm = BULAN[m[2].toLowerCase().slice(0,3)];
+    if (mm) return `${m[3]}-${String(mm).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  }
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); // '12/7/2026' (D/M/YYYY id-ID)
+  if (m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return '';
+}
+
+// Transaction ID unik: timestamp + random suffix, supaya tidak bentrok
+// meski dua order dibuat di milidetik yang sama (mis. tap cepat di device beda)
+function generateTransactionId() {
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `TXN-${Date.now()}-${rand}`;
+}
+
+// Konversi YYYY-MM-DD (dari <input type=date>) ke format DD/M/YYYY ala id-ID
+function formatDateID(isoDate) {
+  const [y, m, d] = isoDate.split('-');
+  // Gunakan format "DD Mon YYYY" (misal "07 Jul 2026") supaya
+  // Google Sheets tidak salah baca sebagai format Amerika (M/D/YYYY)
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const mIdx = parseInt(m) - 1;
+  return `${d} ${bulan[mIdx]} ${y}`;
+}
+
+// ─── SYNC KE GOOGLE SHEETS ─────────────────────────────────────
+// ─── ANTRIAN SYNC (untuk retry otomatis jika gagal/offline) ────
+let syncQueue = JSON.parse(safeStorage.getItem('ls_sync_queue') || '[]');
+let isSyncing = false;
+
+// ── AUTO-CLEANUP SEKALI JALAN ──
+// Versi sebelumnya sempat kena bug: fetch tanpa no-cors gagal baca respons
+// (CORS block dari redirect Apps Script), bikin order dianggap gagal terus
+// padahal server sudah sukses proses — order itu numpuk di antrian retry
+// selamanya ("zombie"), dan bisa insert ulang tiap retry kalau baris aslinya
+// sempat dihapus manual di Sheets. Kode ini jalan OTOMATIS sekali saat kasir
+// buka HTML versi baru ini (tidak perlu apa-apa dari kasir, tidak perlu buka
+// Console) — bersihkan sisa antrian lama yang berpotensi zombie itu.
+// Aman: proteksi anti-duplikat utama tetap ada di server (cek Order ID),
+// jadi order yang genuinely belum tersimpan pun tidak akan hilang percuma —
+// paling buruk perlu di-input ulang manual kalau memang belum ke-input,
+// tapi cek dulu ke Sheets sebelum re-input supaya tidak dobel.
+const SYNC_QUEUE_FIX_VERSION = 'nocors-fix-2026-07-08';
+if (safeStorage.getItem('ls_sync_queue_fix_version') !== SYNC_QUEUE_FIX_VERSION) {
+  if (syncQueue.length > 0) {
+    console.warn(`Membersihkan ${syncQueue.length} antrian sync lama (kemungkinan zombie dari bug sebelumnya).`);
+  }
+  syncQueue = [];
+  safeStorage.setItem('ls_sync_queue', JSON.stringify(syncQueue));
+  safeStorage.setItem('ls_sync_queue_fix_version', SYNC_QUEUE_FIX_VERSION);
+}
+
+// ── RECONCILIATION STATUS PENDING/UPLOADED ──
+// Order lama (dibuat sebelum fitur status Pending/Uploaded ada) tidak
+// punya field syncStatus sama sekali → badge default tampil "Pending"
+// walau order itu sebenarnya sudah lama tersimpan di Sheets. Kalau order
+// tidak punya syncStatus TAPI juga tidak ada di antrian retry saat ini,
+// berarti dulu sudah terkirim sukses (fire-and-forget no-cors) — aman
+// dianggap Uploaded. Jalan otomatis tiap kali halaman dibuka.
+function reconcileSyncStatus() {
+  const queuedOrderIds = new Set(
+    syncQueue.map(j => String((j.rows && j.rows[0] && j.rows[0].orderId) || j.orderId || ''))
+  );
+  let adaPerubahan = false;
+  orders.forEach(o => {
+    if (!o.syncStatus && !queuedOrderIds.has(String(o.id))) {
+      o.syncStatus = 'uploaded';
+      adaPerubahan = true;
+    }
+  });
+  if (adaPerubahan) saveOrders();
+}
+reconcileSyncStatus();
+
+function saveSyncQueue() {
+  safeStorage.setItem('ls_sync_queue', JSON.stringify(syncQueue));
+}
+
+function queuePush(payload) {
+  syncQueue.push({ ...payload, _addedAt: Date.now(), _attempts: 0 });
+  saveSyncQueue();
+  updateSyncStatus();
+}
+
+async function processSyncQueue() {
+  const url = APPS_SCRIPT_URL;
+  if (!url || isSyncing || syncQueue.length === 0) return;
+  if (!navigator.onLine) return; // jangan coba kalau jelas-jelas offline
+
+  isSyncing = true;
+  while (syncQueue.length > 0) {
+    const job = syncQueue[0];
+    try {
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors', // lihat catatan di syncOrderToSheets soal kenapa no-cors
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(job)
+      });
+      // Anggap sukses (optimistic) — proteksi anti-duplikat sebenarnya
+      // ada di server via cek Order ID, bukan di kemampuan baca respons ini.
+      markOrderUploaded(job);
+      syncQueue.shift();
+      saveSyncQueue();
+    } catch (e) {
+      job._attempts = (job._attempts || 0) + 1;
+      saveSyncQueue();
+      console.warn('Sync gagal, akan dicoba lagi:', e);
+      break; // berhenti, coba lagi nanti (jangan spam retry beruntun)
+    }
+  }
+  isSyncing = false;
+  updateSyncStatus();
+}
+
+// Tandai order (di localStorage) sebagai sudah ter-upload, berdasarkan
+// orderId yang ada di payload job yang baru sukses disync
+function markOrderUploaded(job) {
+  const orderId = job.rows && job.rows[0] ? job.rows[0].orderId : job.orderId;
+  if (!orderId) return;
+  const o = orders.find(x => String(x.id) === String(orderId));
+  if (o) {
+    o.syncStatus = 'uploaded';
+    saveOrders();
+    renderLog();
+  }
+}
+
+// Coba proses antrian tiap kali koneksi kembali online
+window.addEventListener('online', () => {
+  showNotif('🌐 Koneksi kembali — menyinkronkan data tertunda…');
+  processSyncQueue();
+});
+
+// Coba proses antrian tiap 15 detik (jaga-jaga event 'online' tidak terpicu)
+setInterval(processSyncQueue, 15000);
+
+// ─── SYNC KE GOOGLE SHEETS ─────────────────────────────────────
+async function syncOrderToSheets(order) {
+  const url = APPS_SCRIPT_URL;
+  if (!url) return; // Belum dikonfigurasi, skip
+
+  const rows = order.items.map(item => ({
+    tanggal: order.orderDate,
+    waktu: order.timestamp,
+    customer: order.customer,
+    produk: item.name,
+    qty: item.qty,
+    // Harga satuan dihitung dari total aktual / qty — akurat walau kena
+    // harga tier/bundling (bukan selalu basePrice normal)
+    hargaSatuan: item.qty > 0 ? Math.round(item.total / item.qty) : 0,
+    hpp: getProduct(item.id)?.hpp || 0,
+    total: item.total,
+    kategori: order.kategori,
+    totalOrder: order.total,
+    kasir: order.cashier,
+    orderId: order.id
+  }));
+
+  const payload = { action: 'add', rows };
+
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    // PENTING: kembali pakai no-cors. Apps Script Web App redirect ke domain
+    // googleusercontent.com yang tidak kirim header CORS yang bisa dibaca browser
+    // — kalau kita coba baca respons (fetch biasa), browser SELALU anggap gagal
+    // walau server-nya sukses proses, bikin order masuk retry queue selamanya
+    // dan bisa "insert ulang" tiap kali di-retry. Proteksi anti-duplikat
+    // sekarang murni diserahkan ke server (cek Order ID sebelum insert),
+    // bukan ke kemampuan client baca respons.
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    // no-cors tidak kasih tahu sukses/gagal HTTP secara pasti, tapi kalau fetch
+    // tidak throw berarti request terkirim — anggap sukses (optimistic).
+    // Proteksi sebenarnya ada di server (Order ID sudah pernah masuk = skip).
+    order.syncStatus = 'uploaded';
+    saveOrders();
+    renderLog();
+    showNotif(`✓ Order tersimpan & tersync ke Sheets`);
+  } catch (e) {
+    console.warn('Sync gagal, dimasukkan ke antrian retry:', e);
+    queuePush(payload);
+    showNotif(`⚠️ Order tersimpan lokal — akan disync otomatis saat online`);
+  }
+}
+
+// ─── HAPUS ORDER DARI SHEETS ────────────────────────────────────
+async function deleteOrderFromSheets(orderId) {
+  const url = APPS_SCRIPT_URL;
+  if (!url) return;
+  const payload = { action: 'delete', orderId };
+  try {
+    if (!navigator.onLine) throw new Error('offline');
+    await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.warn('Hapus di Sheets gagal, dimasukkan ke antrian retry:', e);
+    queuePush(payload);
+  }
+}
+
+// ─── SETUP SCRIPT URL ──────────────────────────────────────────
+function setupScriptUrl() {
+  const url = prompt('Paste URL Google Apps Script kamu:', APPS_SCRIPT_URL);
+  if (url && url.startsWith('https://')) {
+    APPS_SCRIPT_URL = url;
+    safeStorage.setItem('ls_script_url', url);
+    showNotif('✓ URL tersimpan!');
+    updateSyncStatus();
+  }
+}
+
+function updateSyncStatus() {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const pending = syncQueue.length;
+  if (!APPS_SCRIPT_URL) {
+    el.textContent = '⚙️ Sheets';
+    el.style.color = 'var(--muted)';
+  } else if (pending > 0) {
+    el.textContent = `🟡 ${pending} tertunda`;
+    el.style.color = 'var(--gold)';
+  } else {
+    el.textContent = '🟢 Sheets';
+    el.style.color = 'var(--sage)';
+  }
+}
+
+// ─── LOG ───────────────────────────────────────────────────────
+function deleteOrder(id) {
+  if (!confirm('Hapus order ini? Data di Google Sheets juga akan ikut terhapus.')) return;
+  if (editingOrderId && String(editingOrderId) === String(id)) {
+    cart = {};
+    resetEditUI();
+    renderCart();
+  }
+  orders = orders.filter(o => String(o.id) !== String(id));
+  saveOrders();
+  renderLog();
+  deleteOrderFromSheets(id);
+  showNotif('✓ Order dihapus & Sheets diperbarui');
+}
+
+function renderLog() {
+  const container = document.getElementById('logEntries');
+  if (orders.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0;">Belum ada order hari ini.</div>';
+    document.getElementById('omzetDisplay').textContent = '';
+    return;
+  }
+
+  container.innerHTML = [...orders].reverse().map(o => {
+    const today = new Date().toLocaleDateString('id-ID');
+    const isPreOrder = o.orderDate && o.orderDate !== today;
+    return `
+    <div class="log-entry">
+      <div class="log-head">
+        <div>
+          <span class="customer-name">${o.customer}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:8px;">${o.timestamp}</span>
+          ${o.cashier ? `<span style="font-size:10px;color:var(--sage);margin-left:6px;">· ${o.cashier}</span>` : ''}
+          ${isPreOrder ? `<span style="font-size:10px;color:var(--gold);margin-left:6px;background:#FFF8EC;padding:1px 6px;border-radius:8px;">📅 PO ${o.orderDate}</span>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge ${o.kategori === 'Paid' ? 'badge-paid' : 'badge-free'}">${o.kategori}</span>
+          <span style="font-size:10px;padding:1px 6px;border-radius:8px;${o.syncStatus === 'uploaded' ? 'color:var(--sage);background:#EFF7EF;' : 'color:var(--gold);background:#FFF8EC;'}">${o.syncStatus === 'uploaded' ? '🟢 Uploaded' : '🟡 Pending'}</span>
+          <button class="btn-delete-log" onclick="editOrder('${o.id}')" title="Edit order" style="color:var(--sage);">✎</button>
+          <button class="btn-delete-log" onclick="printOrderTag('${o.id}')" title="Cetak order tag" style="color:var(--sage);">🖨</button>
+          <button class="btn-delete-log" onclick="deleteOrder('${o.id}')">✕</button>
+        </div>
+      </div>
+      <div class="log-items">
+        ${o.items.map(i => `${i.name} ×${i.qty} → ${fmt(i.total)}`).join('<br>')}
+      </div>
+      ${o.kategori === 'Paid' ? `<div class="log-total">${fmt(o.total)}</div>` : '<div style="font-size:11px;color:var(--muted);margin-top:4px;">Gratis / Marketing</div>'}
+    </div>
+  `;
+  }).join('');
+
+  const omzet = totalOmzet();
+  const paidCount = orders.filter(o => o.kategori === 'Paid').length;
+  const freeCount = orders.filter(o => o.kategori !== 'Paid').length;
+  document.getElementById('omzetDisplay').textContent =
+    `Omzet: ${fmt(omzet)} | Paid: ${paidCount} | Gratis: ${freeCount}`;
+}
+
+// ─── VERIFIKASI STATUS KE SERVER (sumber kebenaran: Sheets) ────
+// Tanya server Order ID mana saja yang SUDAH ada di Sheets, lalu:
+// 1. Update badge Pending → Uploaded sesuai kenyataan server (bukan tebakan)
+// 2. Buang job antrian retry yang order-nya ternyata sudah tersimpan
+//    → ini yang mematikan "zombie" secara permanen di device manapun
+// GET ke Apps Script bisa dibaca responnya (beda dengan POST), jadi ini
+// konfirmasi sungguhan, bukan optimistic guess.
+let isVerifying = false;
+async function verifySyncStatus(silent) {
+  const url = APPS_SCRIPT_URL;
+  if (!url || isVerifying || !navigator.onLine) return;
+
+  // Kumpulkan semua Order ID yang perlu dicek: order lokal + isi antrian
+  const localIds = orders.map(o => String(o.id));
+  const queueIds = syncQueue
+    .map(j => String((j.rows && j.rows[0] && j.rows[0].orderId) || j.orderId || ''))
+    .filter(Boolean);
+  const allIds = [...new Set([...localIds, ...queueIds])];
+  if (allIds.length === 0) return;
+
+  isVerifying = true;
+  try {
+    const res = await fetch(url + '?action=checkOrders&ids=' + encodeURIComponent(allIds.join(',')));
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.exists) throw new Error(data.message || 'respons tidak dikenal');
+
+    let statusUpdated = 0;
+    let zombiesKilled = 0;
+
+    // 1. Sinkronkan badge dengan kenyataan server
+    orders.forEach(o => {
+      const ada = data.exists[String(o.id)];
+      if (ada && o.syncStatus !== 'uploaded') {
+        o.syncStatus = 'uploaded';
+        statusUpdated++;
+      } else if (ada === false && o.syncStatus === 'uploaded') {
+        // Server bilang TIDAK ada padahal lokal bilang uploaded →
+        // kembalikan ke pending supaya dikirim ulang (dedup server aman)
+        o.syncStatus = 'pending';
+        queuePush({ action: 'add', rows: buildRowsPayload(o) });
+        statusUpdated++;
+      }
+    });
+    if (statusUpdated > 0) { saveOrders(); renderLog(); }
+
+    // 2. Bunuh zombie: buang job 'add' yang order-nya sudah ada di server
+    const before = syncQueue.length;
+    syncQueue = syncQueue.filter(j => {
+      if ((j.action || 'add') !== 'add') return true; // job delete dibiarkan
+      const jid = String((j.rows && j.rows[0] && j.rows[0].orderId) || '');
+      return !(jid && data.exists[jid] === true);
+    });
+    zombiesKilled = before - syncQueue.length;
+    if (zombiesKilled > 0) saveSyncQueue();
+
+    if (!silent) {
+      showNotif(`✓ Verifikasi server: ${statusUpdated} status diperbarui, ${zombiesKilled} antrian usang dibuang`);
+    }
+  } catch (e) {
+    if (!silent) showNotif('⚠️ Gagal verifikasi ke server: ' + e.message);
+    console.warn('verifySyncStatus gagal:', e);
+  } finally {
+    isVerifying = false;
+    updateSyncStatus();
+  }
+}
+
+// Payload rows untuk kirim ulang order (dipakai verifySyncStatus)
+function buildRowsPayload(order) {
+  return order.items.map(item => ({
+    tanggal: order.orderDate,
+    waktu: order.timestamp,
+    customer: order.customer,
+    produk: item.name,
+    qty: item.qty,
+    hargaSatuan: item.qty > 0 ? Math.round(item.total / item.qty) : 0,
+    hpp: getProduct(item.id)?.hpp || 0,
+    total: item.total,
+    kategori: order.kategori,
+    totalOrder: order.total,
+    kasir: order.cashier,
+    orderId: order.id
+  }));
+}
+
+// Verifikasi otomatis: saat halaman dibuka + tiap 2 menit
+setTimeout(() => verifySyncStatus(true), 4000);
+setInterval(() => verifySyncStatus(true), 120000);
+
+// ─── PRINT ORDER TAG (thermal 58mm via Bluetooth) ──────────────
+// Membangun tag per customer lalu memanggil dialog print browser.
+// Android meneruskan ke printer Bluetooth ber-print-service; iPhone via
+// AirPrint (printer thermal umumnya tidak support — pakai Save as PDF,
+// atau gunakan Print Station terpusat untuk cetak semua dari 1 device).
+function buildTagHTML(o) {
+  const isPO = o.orderDate && o.orderDate !== new Date().toLocaleDateString('id-ID');
+  return `
+    <div class="print-tag">
+      <div class="pt-header">🥄 LITTLE SPOON</div>
+      <div class="pt-customer">${escapeHtml(o.customer)}</div>
+      <div class="pt-meta">
+        ${isPO ? '📅 PO: ' + escapeHtml(o.orderDate) : escapeHtml(o.orderDate || '')}<br>
+        Input: ${escapeHtml(o.timestamp || '')}${o.cashier ? ' · ' + escapeHtml(o.cashier) : ''}
+      </div>
+      <div class="pt-items">
+        ${o.items.map(i => `
+          <div class="pt-item">
+            <span>${escapeHtml(i.name)}</span>
+            <span>×${i.qty}</span>
+          </div>`).join('')}
+      </div>
+      ${o.kategori === 'Paid'
+        ? `<div class="pt-total">TOTAL: ${fmt(o.total)}</div>`
+        : `<div class="pt-total">FREE / MARKETING</div>`}
+      <div class="pt-note">Terima kasih! 🤎</div>
+    </div>`;
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function printOrderTag(id) {
+  const o = orders.find(x => String(x.id) === String(id));
+  if (!o) return showNotif('Order tidak ditemukan');
+  document.getElementById('printArea').innerHTML = buildTagHTML(o);
+  window.print();
+}
+
+function printAllTags() {
+  if (orders.length === 0) return showNotif('Belum ada order');
+  // Urut sesuai urutan input (terlama dulu) supaya urutan kertas = urutan packing
+  document.getElementById('printArea').innerHTML = orders.map(buildTagHTML).join('');
+  window.print();
+}
+
+// ─── EXPORT CSV ────────────────────────────────────────────────
+function exportCSV() {
+  if (orders.length === 0) return showNotif('Belum ada data');
+  const today = new Date().toLocaleDateString('id-ID');
+  const rows = [['Tanggal', 'Nama Customer', 'Produk', 'Qty', 'Harga Satuan', 'Total', 'Kategori']];
+
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      const p = getProduct(item.id);
+      rows.push([
+        today, o.customer, item.name, item.qty,
+        p.basePrice, item.total, o.kategori
+      ]);
+    });
+  });
+
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `laporan-${today.replace(/\//g,'-')}.csv`;
+  a.click();
+  showNotif('CSV berhasil didownload');
+}
+
+async function clearAll() {
+  // Verifikasi dulu ke server supaya peringatan berbasis kenyataan Sheets,
+  // bukan status lokal yang mungkin basi (mis. Safari suspend sebelum
+  // sempat menandai uploaded) — mencegah peringatan "belum terupload" palsu
+  showNotif('Memverifikasi status ke server dulu…');
+  await verifySyncStatus(true);
+
+  const pending = orders.filter(o => o.syncStatus === 'pending');
+
+  if (pending.length > 0) {
+    const namaPending = pending.map(o => `• ${o.customer} (${fmt(o.total)})`).join('\n');
+    const lanjut = confirm(
+      `⚠️ PERINGATAN: ${pending.length} order BELUM ter-upload ke Sheets (sudah diverifikasi langsung ke server):\n\n${namaPending}\n\n` +
+      `Kalau dilanjutkan, order ini akan HILANG PERMANEN (tidak pernah tersimpan di Sheets sama sekali).\n\n` +
+      `Disarankan: tunggu sampai status sync selesai dulu, atau cek koneksi internet.\n\n` +
+      `Tetap hapus semua sekarang?`
+    );
+    if (!lanjut) return;
+  } else {
+    if (!confirm('Hapus tampilan log order di perangkat ini?\n\nSemua order sudah terverifikasi tersimpan di Google Sheets — ini hanya membersihkan tampilan lokal, bukan menghapus data.')) return;
+  }
+
+  orders = [];
+  saveOrders();
+  renderLog();
+  showNotif('✓ Tampilan lokal dibersihkan — data di Sheets tetap ada');
+}
+
+// ─── INIT ──────────────────────────────────────────────────────
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+// Set tanggal pesanan default ke hari ini (format YYYY-MM-DD untuk input type=date)
+const todayISO = new Date().toLocaleDateString('en-CA'); // en-CA = YYYY-MM-DD
+document.getElementById('orderDateInput').value = todayISO;
+
+try {
+  applyHPPCache();   // pakai HPP tersimpan dulu (offline-safe)
+  loadHPPLive();     // lalu ambil yang terbaru dari Inventory (async)
+  renderProducts();
+  renderCart();
+  renderLog();
+  updateSyncStatus();
+  checkCashierLogin();
+  processSyncQueue();
+} catch (err) {
+  console.error('Init error:', err);
+  alert('Terjadi error saat memuat aplikasi: ' + err.message);
+}
+</script>
+</body>
+</html>
