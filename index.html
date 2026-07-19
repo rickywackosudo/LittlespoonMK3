@@ -608,7 +608,10 @@
   @media (min-width: 701px) {
     .mobile-tabs { display: none; }
   }
-/* ── PRINT ORDER TAG (thermal 58mm) ─────────────────────────── */
+/* ── PRINT ORDER TAG (thermal 80mm, panjang auto per order) ────
+   Format DISAMAKAN dengan Print Station: lebar fix 80mm (kalau
+   printer diset 58mm, driver printer yang menskalakan), panjang
+   mengikuti isi order, auto-cut per tag. ── */
 #printArea { display: none; }
 
 @media print {
@@ -617,28 +620,28 @@
   #printArea { display: block !important; }
 
   @page {
-    size: 58mm auto;   /* lebar kertas thermal; panjang mengikuti isi */
+    size: 80mm auto;   /* lebar kertas thermal; panjang mengikuti isi */
     margin: 0;
   }
 
   .print-tag {
-    width: 48mm;              /* area cetak efektif kertas 58mm */
-    padding: 2mm 1mm 6mm 1mm;
+    width: 72mm;              /* area cetak efektif kertas 80mm */
+    padding: 2mm 1mm 4mm 1mm;
     font-family: 'Courier New', monospace; /* font monospace tajam di thermal */
     font-size: 11px;
     color: #000;
     page-break-after: always; /* tiap tag = 1 potong kertas */
+    page-break-inside: avoid; /* 1 order tidak terbelah 2 potongan */
   }
   .print-tag:last-child { page-break-after: auto; }
 
   .print-tag .pt-header {
     text-align: center;
-    font-weight: bold;
-    font-size: 12px;
     border-bottom: 1px dashed #000;
     padding-bottom: 2mm;
     margin-bottom: 2mm;
   }
+  .print-tag .pt-header img { display: block; margin: 0 auto; width: 60%; max-width: 45mm; height: auto; }
   .print-tag .pt-customer {
     font-size: 14px;
     font-weight: bold;
@@ -657,7 +660,11 @@
   }
   .print-tag .pt-item { display: flex; justify-content: space-between; }
   .print-tag .pt-total { font-weight: bold; text-align: right; }
-  .print-tag .pt-note { font-size: 9px; text-align: center; margin-top: 1mm; }
+  .print-tag .pt-footer {
+    font-size: 9px; text-align: left; margin-top: 2mm;
+    border-top: 1px dashed #000; padding-top: 1.5mm;
+  }
+  .print-tag .pt-note { font-size: 9px; text-align: left; margin-top: 1mm; }
 }
 </style>
 </head>
@@ -1735,11 +1742,15 @@ setInterval(() => verifySyncStatus(true), 120000);
 // Android meneruskan ke printer Bluetooth ber-print-service; iPhone via
 // AirPrint (printer thermal umumnya tidak support — pakai Save as PDF,
 // atau gunakan Print Station terpusat untuk cetak semua dari 1 device).
+// ── Logo Little Spoon (PNG grayscale, di-embed base64 — sama persis
+//    dengan yang dipakai Print Station, file tetap standalone) ──
+const LOGO_B64 = 'data:image/png;base64,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';
+
 function buildTagHTML(o) {
   const isPO = o.orderDate && o.orderDate !== new Date().toLocaleDateString('id-ID');
   return `
     <div class="print-tag">
-      <div class="pt-header">🥄 LITTLE SPOON</div>
+      <div class="pt-header"><img src="${LOGO_B64}" alt="Little Spoon"></div>
       <div class="pt-customer">${escapeHtml(o.customer)}</div>
       <div class="pt-meta">
         ${isPO ? '📅 PO: ' + escapeHtml(o.orderDate) : escapeHtml(o.orderDate || '')}<br>
@@ -1755,6 +1766,10 @@ function buildTagHTML(o) {
       ${o.kategori === 'Paid'
         ? `<div class="pt-total">TOTAL: ${fmt(o.total)}</div>`
         : `<div class="pt-total">FREE / MARKETING</div>`}
+      <div class="pt-footer">
+        follow us @LITTLESPOON.BDG<br>
+        untuk pemesanan : 0859 7411 7919
+      </div>
       <div class="pt-note">Terima kasih! 🤎</div>
     </div>`;
 }
@@ -1764,18 +1779,31 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Tunggu semua logo di area print selesai di-decode dulu baru buka
+// dialog print — kalau langsung window.print(), sebagian browser/print
+// driver mengambil snapshot sebelum gambar termuat → logo kosong.
+function printWhenReady() {
+  const area = document.getElementById('printArea');
+  const imgs = Array.from(area.querySelectorAll('img'));
+  Promise.all(imgs.map(img =>
+    (img.complete && img.naturalWidth > 0)
+      ? Promise.resolve()
+      : new Promise(res => { img.onload = res; img.onerror = res; })
+  )).then(() => window.print());
+}
+
 function printOrderTag(id) {
   const o = orders.find(x => String(x.id) === String(id));
   if (!o) return showNotif('Order tidak ditemukan');
   document.getElementById('printArea').innerHTML = buildTagHTML(o);
-  window.print();
+  printWhenReady();
 }
 
 function printAllTags() {
   if (orders.length === 0) return showNotif('Belum ada order');
   // Urut sesuai urutan input (terlama dulu) supaya urutan kertas = urutan packing
   document.getElementById('printArea').innerHTML = orders.map(buildTagHTML).join('');
-  window.print();
+  printWhenReady();
 }
 
 // ─── EXPORT CSV ────────────────────────────────────────────────
