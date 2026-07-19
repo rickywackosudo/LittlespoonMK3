@@ -686,11 +686,11 @@
       <p class="section-title">🥐 Menu</p>
       <div class="product-grid" id="grid-menu"></div>
 
-      <p class="section-title">🤝 B2B</p>
-      <div class="product-grid" id="grid-b2b"></div>
+      <p class="section-title">🤝 B2B Salt Bread</p>
+      <div class="product-grid" id="grid-b2bsalt"></div>
 
-      <p class="section-title">📦 Packaging</p>
-      <div class="product-grid" id="grid-packaging"></div>
+      <p class="section-title">🤝 B2B Lainnya</p>
+      <div class="product-grid" id="grid-b2b"></div>
     </div>
 
     <!-- ORDER -->
@@ -774,9 +774,14 @@ const safeStorage = {
 };
 
 // ─── PRODUCT DATA ─────────────────────────────────────────────
-// UPDATE 12 Jul 2026:
-// • Struktur baru 3 grup: menu / b2b / packaging (id lama produk TIDAK
-//   berubah, jadi order lama di localStorage tetap terbaca).
+// UPDATE 19 Jul 2026:
+// • Struktur 3 grup: menu / b2bsalt / b2b (id lama produk TIDAK berubah,
+//   jadi order lama di localStorage tetap terbaca).
+// • Grup b2bsalt: 7 varian SB B2B, tier 12–23 pcs (disc 20%) dan
+//   24+ pcs (disc 30%), minimal order 12 pcs (minQty).
+// • Grup packaging (Box 20/22) DIHILANGKAN dari POS. Guard isPackaging
+//   di calcOrderTotal/renderProducts dibiarkan sebagai defensive code
+//   agar order lama yang berisi id packaging tetap aman terbaca.
 // • Semua hpp disamakan ke HPP_Produk LSMk3 terbaru (per pcs; produk B2B
 //   dengan yield per batch sudah dibagi yield-nya).
 // • Packaging: harga 0 (tidak dibebankan ke pembeli, biaya tercatat di
@@ -809,6 +814,37 @@ const PRODUCTS = {
       basePrice: 80000, hpp: 42837,
     },
   ],
+  // ── B2B SALT BREAD (Jul 2026) ──────────────────────────────
+  // Harga tier: 12–23 pcs = disc 20%, 24+ pcs = disc 30%.
+  // minQty: 12 → klik pertama langsung masuk 12 pcs, tambah bebas 1-1,
+  // kurang di bawah 12 = item dihapus dari cart.
+  // HPP = HPP retail MINUS packaging (Paperbag 0.3 + Stamp 1 +
+  // Kertas Wrapper 0.25 = Rp 1.042/pcs) — resep B2B di sheet Resep BOM
+  // tidak berisi bahan packaging (lihat tambahResepB2BSaltBread di
+  // inventory script v7).
+  b2bsalt: [
+    { id: 'SBB_ORI', name: 'SB B2B Original',          basePrice: 14000, hpp: 5778,
+      minQty: 12, tiers: [ { qty: 24, price: 13000 }, { qty: 12, price: 14000 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_GAR', name: 'SB B2B Garlic',            basePrice: 15500, hpp: 4806,
+      minQty: 12, tiers: [ { qty: 24, price: 13500 }, { qty: 12, price: 15500 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_CHO', name: 'SB B2B Double Choco',      basePrice: 18000, hpp: 5739,
+      minQty: 12, tiers: [ { qty: 24, price: 15500 }, { qty: 12, price: 18000 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_UBE', name: 'SB B2B Ube',               basePrice: 19500, hpp: 7323,
+      minQty: 12, tiers: [ { qty: 24, price: 17000 }, { qty: 12, price: 19500 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_QUA', name: 'SB B2B Quattro Formaggi',  basePrice: 19500, hpp: 7629,
+      minQty: 12, tiers: [ { qty: 24, price: 17000 }, { qty: 12, price: 19500 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_COC', name: 'SB B2B Chilli Oil Cheese', basePrice: 20000, hpp: 9220,
+      minQty: 12, tiers: [ { qty: 24, price: 17500 }, { qty: 12, price: 20000 } ],
+      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_COI', name: 'SB B2B Chilli Oil',        basePrice: 17500, hpp: 7726,
+      minQty: 12, tiers: [ { qty: 24, price: 15500 }, { qty: 12, price: 17500 } ],
+      note: 'Minimal order 12 pcs' },
+  ],
   b2b: [
     {
       id: 'MT',     name: 'Mousse Tiramisu',
@@ -829,13 +865,6 @@ const PRODUCTS = {
     { id: 'MC_BON', name: 'Mille Crepe Tiramisu Bonfire',     basePrice: 215000, hpp: 145758 },
     { id: 'MC_KYO', name: 'Mille Crepe Tiramisu Kantor Yoyo', basePrice: 285000, hpp: 160758 },
     { id: 'MC_SBO', name: 'Mille Crepe Strawberry Bonfire',   basePrice: 218500, hpp: 113719 },
-  ],
-  packaging: [
-    // Harga 0: biaya box tidak dibebankan ke pembeli — sudah tercatat
-    // sebagai Pengeluaran (Bahan Baku) saat pembelian. hpp: 0 supaya
-    // tidak double-count biaya di laporan profit POS.
-    { id: 'BOX20', name: 'Box 20 Salt Bread', basePrice: 0, hpp: 0, isPackaging: true, note: 'Tidak dibebankan ke pembeli' },
-    { id: 'BOX22', name: 'Box 22 Salt Bread', basePrice: 0, hpp: 0, isPackaging: true, note: 'Tidak dibebankan ke pembeli' },
   ]
 };
 
@@ -865,6 +894,14 @@ const BOM_NAME = {
   SB_QUA: 'Salt Bread Quattro Formaggi',
   SB_COC: 'Salt Bread Chilli Oil Cheese',
   SB_COI: 'Salt Bread Chilli Oil',
+  // B2B Salt Bread (resep tanpa packaging di sheet Resep BOM)
+  SBB_ORI: 'SB B2B Original',
+  SBB_GAR: 'SB B2B Garlic',
+  SBB_CHO: 'SB B2B Double Choco',
+  SBB_UBE: 'SB B2B Ube',
+  SBB_QUA: 'SB B2B Quattro Formaggi',
+  SBB_COC: 'SB B2B Chilli Oil Cheese',
+  SBB_COI: 'SB B2B Chilli Oil',
   BKH:    'Bolu Ketan Hitam 15cm',
   MT:     'Mouse Tiramisu',
   IMB:    'Ichigo Matcha Biscoe',
@@ -883,7 +920,7 @@ function applyHPPValues(hppMap) {
   const idx = {};
   Object.entries(hppMap).forEach(([k, v]) => { idx[String(k).toLowerCase().trim()] = v; });
   let updated = 0;
-  ['menu', 'b2b'].forEach(cat => {
+  ['menu', 'b2bsalt', 'b2b'].forEach(cat => {
     PRODUCTS[cat].forEach(p => {
       if (p.isPackaging) return;
       const bomName = BOM_NAME[p.id];
@@ -949,7 +986,7 @@ let cashierName = safeStorage.getItem('ls_cashier_name') || '';
 const fmt = n => 'Rp ' + n.toLocaleString('id-ID');
 
 function getProduct(id) {
-  return [...PRODUCTS.menu, ...PRODUCTS.b2b, ...PRODUCTS.packaging].find(p => p.id === id);
+  return [...PRODUCTS.menu, ...PRODUCTS.b2bsalt, ...PRODUCTS.b2b].find(p => p.id === id);
 }
 
 function calcItemPrice(id, qty) {
@@ -1010,7 +1047,7 @@ function showNotif(msg) {
 
 // ─── RENDER PRODUCTS ───────────────────────────────────────────
 function renderProducts() {
-  ['menu', 'b2b', 'packaging'].forEach(cat => {
+  ['menu', 'b2bsalt', 'b2b'].forEach(cat => {
     const grid = document.getElementById('grid-' + cat);
     if (!grid) return;
     grid.innerHTML = '';
@@ -1055,15 +1092,26 @@ function updateCartCountBadge() {
 
 // ─── CART ──────────────────────────────────────────────────────
 function addToCart(id) {
-  cart[id] = (cart[id] || 0) + 1;
+  const p = getProduct(id);
+  if (!cart[id] && p && p.minQty) {
+    // Produk dengan minimal order (B2B Salt Bread): klik pertama
+    // langsung masuk sejumlah minQty, penambahan berikutnya 1-1
+    cart[id] = p.minQty;
+  } else {
+    cart[id] = (cart[id] || 0) + 1;
+  }
   renderCart();
   // Di mobile, langsung pindah ke tab Order biar user lihat hasilnya
   if (window.innerWidth <= 700) switchMobileTab('order');
 }
 
 function setQty(id, delta) {
+  const p = getProduct(id);
   cart[id] = (cart[id] || 0) + delta;
-  if (cart[id] <= 0) delete cart[id];
+  if (cart[id] <= 0 || (p && p.minQty && cart[id] < p.minQty)) {
+    // Di bawah minimal order → item dihapus dari cart
+    delete cart[id];
+  }
   renderCart();
 }
 
@@ -1093,9 +1141,13 @@ function renderCart() {
       ? (() => {
           // Multi-tier per-pcs: tampilkan tier yang sedang aktif untuk qty ini
           const tier = p.tiers.find(t => qty >= t.qty);
-          return tier
+          if (!tier) return `${qty} pcs × ${fmt(p.basePrice)}`;
+          // Produk minimal-order (B2B Salt Bread): tier dasar tampil polos,
+          // label bundling hanya muncul saat tier lebih tinggi aktif
+          const tampilLabel = !p.minQty || tier.qty > p.minQty;
+          return tampilLabel
             ? `${qty} pcs × ${fmt(tier.price)} (harga bundling ${tier.qty}+ pcs)`
-            : `${qty} pcs × ${fmt(p.basePrice)}`;
+            : `${qty} pcs × ${fmt(tier.price)}`;
         })()
       : p.bundle
       ? (() => {
