@@ -34,16 +34,32 @@
   header {
     background: var(--brown);
     color: var(--cream);
-    padding: 16px 24px;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
   }
 
   header h1 {
     font-family: 'DM Serif Display', serif;
     font-size: 22px;
     letter-spacing: 0.02em;
+  }
+
+  /* Logo brand di header — 27 Okt 2026: logo baru (tulisan Little Spoon +
+     beruang chef) dan tampil BESAR: 84px di laptop/tablet, 64px di HP.
+     PNG putih transparan, di-embed base64 supaya file tetap standalone dan
+     logo tetap muncul saat offline. Sumber 192px tinggi → tajam di layar
+     retina. Latar coklat header tidak diubah. */
+  .brand-logo {
+    height: 84px;
+    width: auto;
+    max-width: 62vw;
+    object-fit: contain;
+    object-position: left center;
+    display: block;
+    flex-shrink: 0;
   }
 
   header .date-display {
@@ -55,7 +71,9 @@
     display: grid;
     grid-template-columns: 1fr 380px;
     gap: 0;
-    height: calc(100vh - 58px);
+    /* 27 Okt 2026: tinggi header + bar tanggal diukur otomatis (--tinggi-atas),
+       jadi area kasir tetap pas satu layar walau logo dibuat besar. */
+    height: calc(100vh - var(--tinggi-atas, 58px));
   }
 
   /* LEFT: Product Panel */
@@ -223,6 +241,39 @@
     font-size: 11px;
     color: var(--muted);
     margin-top: 2px;
+  }
+
+  /* ── Harga khusus sekali pakai untuk item Special Menu (v16) ── */
+  .btn-ubah-harga {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: var(--terracotta);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 1px 6px;
+    margin-left: 5px;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+  .order-item .item-sub.harga-khusus {
+    color: var(--terracotta);
+    font-weight: 600;
+  }
+  .order-item .item-sub .harga-asli {
+    color: var(--muted);
+    font-weight: 400;
+    text-decoration: line-through;
+  }
+  .btn-reset-harga {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0 0 0 2px;
+    cursor: pointer;
+    text-decoration: underline;
   }
 
   .qty-ctrl {
@@ -599,15 +650,282 @@
     header {
       flex-wrap: wrap;
       gap: 8px;
-      padding: 14px 16px;
+      padding: 10px 16px;
     }
 
     header h1 { font-size: 17px; }
+    .brand-logo { height: 64px; }
+
+    /* ── tampilan-hp-4nov (4 Nov 2026): panel Order di HP ──────────
+       Dulu seluruh kasir dipaksa muat SATU layar. Di HP, setelah header,
+       tab, form customer, dan Laporan di bawahnya, daftar item order hanya
+       kebagian ±70px → item tertutup dan sulit dicek. Sekarang halaman
+       menggulir biasa: semua item tampil penuh & besar, sedangkan Total +
+       tombol "Tambah ke Laporan" menempel di bawah layar supaya selalu
+       bisa ditekan. Tampilan PC tidak berubah. */
+    #appMain { height: auto !important; }
+    .layout { flex: none !important; }
+    .order-panel { overflow: visible; }
+    .order-header { padding: 14px 16px 12px; }
+    .order-items { flex: none; overflow: visible; padding: 4px 16px 12px; }
+    .order-item { flex-wrap: wrap; gap: 8px 10px; padding: 12px 0; }
+    /* baris 1: nama produk selebar layar; baris 2: qty, total, hapus */
+    .order-item > div:first-child { flex: 1 1 100% !important; }
+    .order-item .item-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
+    .order-item .item-sub { font-size: 12.5px; }
+    .order-item .qty-ctrl { margin-right: auto; gap: 10px; }
+    .qty-ctrl button { width: 38px; height: 38px; font-size: 20px; border-radius: 9px; }
+    .qty-ctrl span { font-size: 16px; min-width: 28px; }
+    .item-total { font-size: 15px; min-width: 0; }
+    .btn-remove { font-size: 18px; padding: 8px 4px 8px 10px; }
+    .order-panel .empty-state { padding: 28px 16px; }
+    .order-footer {
+      position: sticky;
+      bottom: 0;
+      z-index: 20;
+      background: var(--warm-white);
+      box-shadow: 0 -6px 14px rgba(59,42,26,0.08);
+      padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .order-footer .totals { margin-bottom: 10px; }
+    .order-footer .total-row.grand { margin-top: 0; border-top: none; padding-top: 2px; }
+    .btn-add-order { padding: 14px; font-size: 15px; }
+
+    /* Laporan Hari Ini ikut menggulir bersama halaman (bukan kotak gulir
+       kecil di dalam layar); omzet di baris sendiri, tombol tersusun rapi
+       dan tidak terpotong di kanan layar. */
+    .log-section { max-height: none; overflow: visible; padding: 14px 16px 28px; }
+    .log-title { flex-direction: column; align-items: stretch; gap: 8px; }
+    .log-title > div { flex-wrap: wrap; justify-content: flex-start; gap: 6px !important; }
+    #omzetDisplay { flex-basis: 100%; font-size: 12.5px !important; }
+    .log-title button { padding: 7px 10px; font-size: 11.5px; }
+  }
+
+  /* HP miring (landscape) / layar pendek: jangan paksa satu layar juga */
+  @media (min-width: 701px) and (max-height: 560px) {
+    #appMain { height: auto !important; }
+    .layout { flex: none !important; height: auto; }
+    .order-panel { overflow: visible; }
+    .order-items { flex: none; overflow: visible; }
+    .log-section { max-height: none; overflow: visible; }
+    .brand-logo { height: 56px; }
+  }
+
+  @media (max-width: 340px) {
+    .brand-logo { height: 54px; }
   }
 
   @media (min-width: 701px) {
     .mobile-tabs { display: none; }
   }
+/* ── HALAMAN R&D (v12, 27 Agu 2026) ──────────────────────────── */
+#rndPage { display: none; }
+#rndPage.rnd-open { display: block; }
+body.rnd-mode #appMain { display: none !important; }
+
+.rnd-wrap { max-width: 860px; margin: 0 auto; padding: 18px 16px 120px; }
+.rnd-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.rnd-card h3 {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+}
+.rnd-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.rnd-field label { font-size: 11px; color: var(--muted); }
+#rndPage input[type="text"], #rndPage input[type="number"],
+#rndPage input[type="date"], #rndPage textarea, #rndPage select {
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--brown);
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 9px 10px; width: 100%; box-sizing: border-box;
+}
+#rndPage textarea { resize: vertical; min-height: 52px; }
+
+.rnd-row {
+  display: grid; grid-template-columns: 1fr 88px 96px 30px;
+  gap: 7px; align-items: center; margin-bottom: 7px;
+}
+.rnd-row .rnd-name { font-size: 12.5px; font-weight: 600; line-height: 1.25; }
+.rnd-row .rnd-name small { display: block; font-weight: 400; color: var(--muted); font-size: 10.5px; }
+.rnd-row .rnd-sub { font-size: 12px; text-align: right; color: var(--terracotta); font-weight: 600; }
+.rnd-del {
+  background: none; border: none; cursor: pointer; font-size: 15px;
+  color: var(--muted); padding: 0; line-height: 1;
+}
+.rnd-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 0; }
+
+.rnd-btn {
+  font-family: 'DM Sans', sans-serif; font-size: 12.5px; font-weight: 600;
+  padding: 9px 12px; border-radius: 9px; cursor: pointer;
+  border: 1.5px solid var(--border); background: none; color: var(--brown);
+}
+.rnd-btn-main {
+  width: 100%; background: var(--terracotta); color: #fff;
+  border-color: var(--terracotta); padding: 13px; font-size: 14px;
+}
+.rnd-btn-main:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.rnd-total-line {
+  display: flex; justify-content: space-between;
+  font-size: 12.5px; padding: 4px 0; color: var(--muted);
+}
+.rnd-total-line.grand {
+  font-size: 16px; font-weight: 700; color: var(--brown);
+  border-top: 1.5px solid var(--border); margin-top: 7px; padding-top: 9px;
+}
+.rnd-check { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 10px 0; }
+.rnd-check input { width: auto; }
+
+.rnd-pick-list {
+  max-height: 230px; overflow-y: auto; border: 1px solid var(--border);
+  border-radius: 8px; margin-top: 7px; background: #fff;
+}
+.rnd-pick-item {
+  padding: 9px 10px; font-size: 12.5px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; gap: 8px;
+}
+.rnd-pick-item:last-child { border-bottom: none; }
+.rnd-pick-item:active { background: var(--cream); }
+.rnd-pick-item span:last-child { color: var(--muted); white-space: nowrap; font-size: 11.5px; }
+
+.rnd-limit {
+  background: var(--warm-white);
+  border: 1.5px solid var(--border);
+  border-left: 5px solid var(--sage);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.rnd-limit.warn  { border-left-color: var(--gold); }
+.rnd-limit.habis { border-left-color: var(--terracotta); background: var(--free-bg); }
+.rnd-limit .rl-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.rnd-limit .rl-sisa {
+  font-size: 27px; font-weight: 700; line-height: 1.15;
+  margin: 5px 0 2px; color: var(--sage);
+}
+.rnd-limit.warn  .rl-sisa { color: var(--gold); }
+.rnd-limit.habis .rl-sisa { color: var(--terracotta); }
+.rnd-limit .rl-bang { font-weight: 700; margin-right: 3px; }
+.rnd-limit .rl-detail { font-size: 11px; color: var(--muted); line-height: 1.65; margin-top: 8px; }
+.rnd-limit .rl-bar {
+  height: 6px; border-radius: 4px; background: var(--border);
+  overflow: hidden; margin-top: 10px;
+}
+.rnd-limit .rl-bar > div { height: 100%; background: var(--sage); width: 0; transition: width .25s; }
+.rnd-limit.warn  .rl-bar > div { background: var(--gold); }
+.rnd-limit.habis .rl-bar > div { background: var(--terracotta); }
+
+@media (max-width: 700px) {
+  .rnd-row { grid-template-columns: 1fr 72px 84px 26px; gap: 5px; }
+}
+
+/* ── HALAMAN SPECIAL MENU (v13, 28 Agu 2026) ─────────────────── */
+#spcPage { display: none; }
+#spcPage.rnd-open { display: block; }
+body.spc-mode #appMain { display: none !important; }
+.spc-card-btn {
+  grid-column: 1 / -1; border: 1.5px dashed var(--border);
+  background: none; border-radius: 12px; padding: 14px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--terracotta);
+}
+
+/* ── HALAMAN REKAP PESANAN HARIAN (v15, 3 Sep 2026) ──────────── */
+#rekapPage { display: none; }
+#rekapPage.rnd-open { display: block; }
+body.rekap-mode #appMain { display: none !important; }
+
+/* Cuma satu halaman yang boleh terbuka pada satu waktu. Tombol nav
+   halaman lain disembunyikan saat mode rekap aktif (dan sebaliknya),
+   jadi tidak mungkin ada dua halaman menumpuk. Murni CSS — tidak ada
+   fungsi toggle lama yang perlu diubah. */
+body.rekap-mode #btnRnDNav { display: none !important; }
+body.rnd-mode #btnRekapNav, body.spc-mode #btnRekapNav { display: none !important; }
+
+#rekapPage select {
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--brown);
+  background: #fff; border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 9px 10px; box-sizing: border-box;
+}
+
+.rk-status {
+  font-size: 11.5px; color: var(--muted); line-height: 1.6; margin-top: 10px;
+}
+.rk-meta {
+  font-size: 10.5px; color: var(--muted); line-height: 1.7;
+  border-top: 1px solid var(--border); margin-top: 9px; padding-top: 8px;
+}
+.rk-meta .rk-warn  { color: var(--gold); font-weight: 600; }
+.rk-meta .rk-fresh { color: var(--sage); font-weight: 600; }
+
+.rk-sum {
+  background: var(--warm-white); border: 1.5px solid var(--border);
+  border-left: 5px solid var(--terracotta); border-radius: 12px;
+  padding: 14px; margin-bottom: 14px;
+}
+.rk-sum .rk-sum-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.rk-sum .rk-sum-omzet {
+  font-size: 26px; font-weight: 700; line-height: 1.15;
+  margin: 5px 0 2px; color: var(--terracotta);
+}
+.rk-sum .rk-sum-detail { font-size: 11.5px; color: var(--muted); line-height: 1.7; margin-top: 6px; }
+
+.rk-day {
+  background: var(--warm-white); border: 1px solid var(--border);
+  border-radius: 12px; margin-bottom: 10px; overflow: hidden;
+}
+.rk-day-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 10px; padding: 12px 14px; cursor: pointer;
+}
+.rk-day-head:active { background: var(--cream); }
+.rk-date { font-size: 13.5px; font-weight: 700; color: var(--brown); line-height: 1.3; }
+.rk-sub  { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.rk-omzet { font-size: 14px; font-weight: 700; color: var(--terracotta); white-space: nowrap; }
+.rk-pill {
+  display: inline-block; font-size: 10px; padding: 1px 7px;
+  border-radius: 8px; margin-left: 4px;
+}
+.rk-pill.paid { color: var(--sage); background: #EFF7EF; }
+.rk-pill.free { color: var(--gold); background: #FFF8EC; }
+
+.rk-day-body {
+  border-top: 1px solid var(--border); padding: 10px 14px 12px;
+  background: #fff;
+}
+.rk-group-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 10px 0 5px;
+}
+.rk-group-title:first-child { margin-top: 0; }
+.rk-item {
+  display: grid; grid-template-columns: 1fr 58px 92px;
+  gap: 7px; align-items: baseline;
+  font-size: 12.5px; padding: 4px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.rk-item:last-child { border-bottom: none; }
+.rk-item .rk-qty  { text-align: right; font-weight: 700; color: var(--brown); }
+.rk-item .rk-rp   { text-align: right; color: var(--muted); font-size: 11.5px; }
+.rk-item .rk-free { display: block; font-size: 10px; color: var(--gold); font-weight: 400; }
+.rk-chev { font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+@media (max-width: 700px) {
+  .rk-item { grid-template-columns: 1fr 46px 80px; gap: 5px; font-size: 12px; }
+}
+
 /* ── PRINT ORDER TAG (thermal 80mm, panjang auto per order) ────
    Format DISAMAKAN dengan Print Station: lebar fix 80mm (kalau
    printer diset 58mm, driver printer yang menskalakan), panjang
@@ -671,17 +989,19 @@
 <body>
 
 <header>
-  <h1>🥐 Little Spoon</h1>
+  <img src="data:image/png;base64,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" alt="Little Spoon" class="brand-logo" id="brandLogo" width="480" height="192" />
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
     <span class="cashier-badge" id="cashierBadge" onclick="switchCashier()"></span>
     <button onclick="setupScriptUrl()" id="syncStatus" style="background:none;border:none;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:#C9B9A6;">⚙️ Sheets</button>
+    <button onclick="toggleRnD()" id="btnRnDNav" style="background:none;border:none;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:#C9B9A6;">🧪 R&amp;D</button>
+    <button onclick="toggleRekap()" id="btnRekapNav" style="background:none;border:none;cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:#C9B9A6;">📊 Rekap</button>
   </div>
 </header>
 <div id="dateBar" style="background:var(--cream);border-bottom:1px solid var(--border);padding:6px 16px;font-size:11px;color:var(--muted);text-align:right;" >
   <span id="headerDate"></span>
 </div>
 
-<div style="display:flex; flex-direction:column; height:calc(100vh - 58px);">
+<div id="appMain" style="display:flex; flex-direction:column; height:calc(100vh - var(--tinggi-atas, 58px));">
   <div class="mobile-tabs">
     <button id="tabProducts" class="active" onclick="switchMobileTab('products')">🥐 Produk</button>
     <button id="tabOrder" onclick="switchMobileTab('order')">🧾 Order <span class="cart-count" id="cartCount" style="display:none;">0</span></button>
@@ -690,14 +1010,20 @@
 
     <!-- PRODUCTS -->
     <div class="products-panel mobile-active" id="productsPanel">
-      <p class="section-title">🥐 Menu</p>
-      <div class="product-grid" id="grid-menu"></div>
+      <p class="section-title">🍱 Menu Isi</p>
+      <div class="product-grid" id="grid-dc"></div>
+
+      <p class="section-title">🥐 Salt Bread</p>
+      <div class="product-grid" id="grid-sb"></div>
 
       <p class="section-title">🤝 B2B Salt Bread</p>
       <div class="product-grid" id="grid-b2bsalt"></div>
 
       <p class="section-title">🤝 B2B Lainnya</p>
       <div class="product-grid" id="grid-b2b"></div>
+
+      <p class="section-title">✨ Special Menu</p>
+      <div class="product-grid" id="grid-special"></div>
     </div>
 
     <!-- ORDER -->
@@ -746,6 +1072,156 @@
   </div>
 </div>
 
+<!-- ══ HALAMAN 3: R&D (v12) ══════════════════════════════════ -->
+<div id="rndPage">
+  <div class="rnd-wrap">
+
+    <div class="rnd-limit" id="rndLimitCard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div class="rl-label">Sisa Limit R&amp;D <span id="rndLimitBulan"></span></div>
+        <button onclick="setupInventoryUrl()" style="background:none;border:none;cursor:pointer;font-size:10.5px;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap;padding:0;">⚙️ URL Inventory</button>
+      </div>
+      <div class="rl-sisa" id="rndLimitSisa">Rp 0</div>
+      <div class="rl-bar"><div id="rndLimitBar"></div></div>
+      <div class="rl-detail" id="rndLimitDetail">Memuat limit…</div>
+    </div>
+
+    <div class="rnd-card">
+      <h3>🧪 Sesi R&amp;D</h3>
+      <div class="rnd-field">
+        <label>Judul percobaan</label>
+        <input type="text" id="rndJudul" placeholder="mis. Trial Salt Bread Matcha v1" />
+      </div>
+      <div class="rnd-field">
+        <label>Tanggal</label>
+        <input type="date" id="rndTanggal" onchange="loadRnDLimit()" />
+      </div>
+      <div class="rnd-field">
+        <label>Catatan hasil (opsional)</label>
+        <textarea id="rndCatatan" placeholder="mis. batch 12 pcs, kurang mengembang, proofing tambah 20 menit"></textarea>
+      </div>
+    </div>
+
+    <div class="rnd-card">
+      <h3>🧂 Bahan dari Master Bahan</h3>
+      <input type="text" id="rndCari" placeholder="Cari bahan…" oninput="renderRnDPicker()" />
+      <div class="rnd-pick-list" id="rndPickList">
+        <div class="rnd-empty">Memuat daftar bahan dari Inventory…</div>
+      </div>
+      <div style="margin-top:12px;" id="rndItems">
+        <div class="rnd-empty">Belum ada bahan dipilih</div>
+      </div>
+    </div>
+
+    <div class="rnd-card">
+      <h3>➕ Add-on (di luar Master Bahan)</h3>
+      <div id="rndAddons">
+        <div class="rnd-empty">Belum ada add-on</div>
+      </div>
+      <button class="rnd-btn" style="width:100%;margin-top:8px;" onclick="addRnDAddon()">+ Tambah baris add-on</button>
+    </div>
+
+    <div class="rnd-card">
+      <h3>💰 Total Pengeluaran R&amp;D</h3>
+      <div class="rnd-total-line"><span>Bahan</span><span id="rndTotalBahan">Rp 0</span></div>
+      <div class="rnd-total-line"><span>Add-on</span><span id="rndTotalAddon">Rp 0</span></div>
+      <div class="rnd-total-line grand"><span>Total</span><span id="rndGrandTotal">Rp 0</span></div>
+
+      <label class="rnd-check">
+        <input type="checkbox" id="rndKurangiStok" />
+        <span>Kurangi juga stok di Master Bahan</span>
+      </label>
+      <p style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px;">
+        Total di atas selalu masuk sheet <strong>Pengeluaran</strong> kategori <strong>R&amp;D</strong>,
+        dan rinciannya tersimpan di sheet <strong>Log R&amp;D</strong>. Centang di atas hanya kalau
+        bahannya benar-benar diambil dari stok produksi.
+      </p>
+
+      <button class="rnd-btn rnd-btn-main" id="rndSubmit" onclick="submitRnD()">Simpan ke Pengeluaran</button>
+      <button class="rnd-btn" style="width:100%;margin-top:8px;" onclick="resetRnD()">Kosongkan form</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ HALAMAN 4: SPECIAL MENU (v13) ═════════════════════════ -->
+<div id="spcPage">
+  <div class="rnd-wrap">
+
+    <div class="rnd-card">
+      <h3>✨ Item Special</h3>
+      <div class="rnd-field">
+        <label>Nama item (muncul di struk &amp; Laporan POS)</label>
+        <input type="text" id="spcNama" placeholder="mis. Salt Bread Truffle Custom" />
+      </div>
+      <div class="rnd-field">
+        <label>Harga jual per pcs</label>
+        <input type="number" inputmode="numeric" min="0" step="500" id="spcHarga"
+               placeholder="0" oninput="hitungSpcTotal()" />
+      </div>
+    </div>
+
+    <div class="rnd-card">
+      <h3>🧂 Bahan dari Master Bahan <span style="text-transform:none;font-weight:400;">· stok akan dikurangi</span></h3>
+      <input type="text" id="spcCari" placeholder="Cari bahan…" oninput="renderSpcPicker()" />
+      <div class="rnd-pick-list" id="spcPickList">
+        <div class="rnd-empty">Memuat daftar bahan dari Inventory…</div>
+      </div>
+      <div style="margin-top:12px;" id="spcItems">
+        <div class="rnd-empty">Belum ada bahan dipilih</div>
+      </div>
+    </div>
+
+    <div class="rnd-card">
+      <h3>➕ Add-on <span style="text-transform:none;font-weight:400;">· stok TIDAK dikurangi</span></h3>
+      <div id="spcAddons">
+        <div class="rnd-empty">Belum ada add-on</div>
+      </div>
+      <button class="rnd-btn" style="width:100%;margin-top:8px;" onclick="addSpcAddon()">+ Tambah baris add-on</button>
+    </div>
+
+    <div class="rnd-card">
+      <h3>💰 Ringkasan per pcs</h3>
+      <div class="rnd-total-line"><span>HPP bahan</span><span id="spcTotalBahan">Rp 0</span></div>
+      <div class="rnd-total-line"><span>HPP add-on</span><span id="spcTotalAddon">Rp 0</span></div>
+      <div class="rnd-total-line"><span>Total HPP</span><span id="spcTotalHpp">Rp 0</span></div>
+      <div class="rnd-total-line"><span>Harga jual</span><span id="spcHargaJual">Rp 0</span></div>
+      <div class="rnd-total-line grand"><span>Margin</span><span id="spcMargin">Rp 0</span></div>
+      <div class="rl-detail" id="spcMarginNote" style="margin-top:4px;"></div>
+
+      <button class="rnd-btn rnd-btn-main" id="spcSubmit" style="margin-top:12px;" onclick="submitSpc()">Simpan &amp; masukkan ke order</button>
+      <button class="rnd-btn" style="width:100%;margin-top:8px;" onclick="resetSpc()">Kosongkan form</button>
+      <p style="font-size:11px;color:var(--muted);line-height:1.55;margin-top:10px;">
+        Resep item ini ditulis ke sheet <strong>Resep BOM</strong> dengan namanya sendiri,
+        jadi stok bahannya otomatis terpotong saat order disimpan — sama seperti produk biasa.
+        Add-on tidak punya baris di Master Bahan, jadi biayanya hanya masuk HPP, bukan stok.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ HALAMAN 5: REKAP PESANAN HARIAN (v15, 3 Sep 2026) ═════ -->
+<div id="rekapPage">
+  <div class="rnd-wrap">
+
+    <div class="rnd-card">
+      <h3>📊 Rekap Pesanan Harian</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="rekapBulan" onchange="gantiBulanRekap()" style="flex:1;min-width:150px;"></select>
+        <button class="rnd-btn" id="rekapRefreshBtn" onclick="muatRekap(true)">🔄 Perbarui</button>
+      </div>
+      <div class="rk-status" id="rekapStatus"></div>
+      <div class="rk-meta" id="rekapMeta"></div>
+    </div>
+
+    <div id="rekapTotal"></div>
+    <div id="rekapBody"><div class="rnd-empty">Memuat…</div></div>
+
+    <button class="rnd-btn" style="width:100%;margin-top:6px;" onclick="toggleRekap()">← Kembali ke Kasir</button>
+  </div>
+</div>
+
 <div class="notif" id="notif"></div>
 
 <!-- Area khusus print: terisi saat tombol 🖨 ditekan, hanya tampil saat print -->
@@ -764,31 +1240,54 @@
 // ─── SAFE STORAGE (fallback jika localStorage diblokir, mis. Safari file://) ───
 const safeStorage = {
   _memory: {},
+  _penuhDiberitahu: false,
   getItem(key) {
+    // 27 Okt 2026: nilai yang gagal disimpan (memori penuh) dibaca dari
+    // cadangan memori dulu — dulu justru nilai LAMA di localStorage yang
+    // terbaca, jadi data sesi ini bisa "mundur".
+    if (Object.prototype.hasOwnProperty.call(this._memory, key)) return this._memory[key];
     try {
       return localStorage.getItem(key);
     } catch (e) {
-      return this._memory[key] || null;
+      return null;
     }
   },
   setItem(key, value) {
     try {
       localStorage.setItem(key, value);
+      delete this._memory[key];
     } catch (e) {
       this._memory[key] = value;
+      // 27 Okt 2026: dulu gagal simpan karena memori browser penuh terjadi
+      // diam-diam. Sekarang kasir diberi tahu sekali per sesi.
+      const teks = String((e && e.name) || '') + ' ' + String((e && e.message) || '');
+      if (!this._penuhDiberitahu && /quota|exceed|full|penuh/i.test(teks)) {
+        this._penuhDiberitahu = true;
+        setTimeout(() => {
+          if (typeof showNotif === 'function') {
+            showNotif('⚠️ Memori browser penuh — data terbaru hanya tersimpan sementara. ' +
+                      'Pastikan semua order 🟢 Uploaded, lalu tekan 🗑 Hapus Semua.', 9000);
+          }
+        }, 0);
+      }
     }
   }
 };
 
 // ─── PRODUCT DATA ─────────────────────────────────────────────
-// UPDATE 19 Jul 2026:
-// • Struktur 3 grup: menu / b2bsalt / b2b (id lama produk TIDAK berubah,
-//   jadi order lama di localStorage tetap terbaca).
-// • Grup b2bsalt: 7 varian SB B2B, tier 12–23 pcs (disc 20%) dan
-//   24+ pcs (disc 30%), minimal order 12 pcs (minQty).
-// • Grup packaging (Box 20/22) DIHILANGKAN dari POS. Guard isPackaging
-//   di calcOrderTotal/renderProducts dibiarkan sebagai defensive code
-//   agar order lama yang berisi id packaging tetap aman terbaca.
+// UPDATE 24 Jul 2026:
+// • Struktur 4 grup: dc / sb / b2bsalt / b2b (id lama produk TIDAK
+//   berubah, jadi order lama di localStorage tetap terbaca).
+//   - dc      : Dubai Chewi
+//   - sb      : Salt Bread + Bolu Ketan Hitam + packaging (Rp0)
+//   - b2bsalt : varian SB B2B, 1–23 pcs = harga dasar (disc 20%),
+//               24+ pcs = disc 30%, minimal order 1 pcs
+//               [10 Okt 2026: 12 → 6 pcs · 19 Okt 2026: 6 → 1 pcs]
+//   - b2b     : Mousse Tiramisu, Biscoe, Mille Crepe
+// • Packaging (Paperbag, Box A/B/C) kembali sebagai item di grup sb
+//   dengan harga Rp0 — tidak masuk omzet (guard isPackaging), tapi
+//   tetap dikirim ke Sheets supaya stok terpotong & masuk Log
+//   Pengurangan untuk keperluan stock opname.
 // • Semua hpp disamakan ke HPP_Produk LSMk3 terbaru (per pcs; produk B2B
 //   dengan yield per batch sudah dibagi yield-nya).
 // • Packaging: harga 0 (tidak dibebankan ke pembeli, biaya tercatat di
@@ -796,7 +1295,7 @@ const safeStorage = {
 //   omzet via calcOrderTotal.
 // Catatan: hpp masih hardcoded — stale lagi kalau HPP_Produk berubah.
 const PRODUCTS = {
-  menu: [
+  dc: [
     {
       id: 'DC_ORI', name: 'Dubai Chewi Original',
       basePrice: 35000, hpp: 10303,
@@ -809,53 +1308,101 @@ const PRODUCTS = {
       bundle: { qty: 2, price: 85000 },
       note: 'Bundling 2 pcs = Rp 85.000'
     },
-    { id: 'SB_ORI', name: 'Salt Bread Original',         basePrice: 17000, hpp: 6820 },
-    { id: 'SB_GAR', name: 'Salt Bread Garlic',           basePrice: 19000, hpp: 5848 },
-    { id: 'SB_CHO', name: 'Salt Bread Double Choco',     basePrice: 22000, hpp: 6782 },
-    { id: 'SB_UBE', name: 'Salt Bread Ube',              basePrice: 24000, hpp: 8365 },
-    { id: 'SB_QUA', name: 'Salt Bread Quattro Formaggi', basePrice: 24000, hpp: 8672 },
-    { id: 'SB_COC', name: 'Salt Bread Chili Oil Cheese', basePrice: 25000, hpp: 10263 },
-    { id: 'SB_COI', name: 'Salt Bread Chili Oil',        basePrice: 22000, hpp: 8768 },
     {
       id: 'BKH',    name: 'Bolu Ketan Hitam',
       basePrice: 80000, hpp: 42837,
     },
+    // Bolu Ketan Hitam Besar (20 Jul 2026): bahan = versi 15cm x 1.5,
+    // packaging qty manual (BOX 2.375 Pcs, Alas kue 2 Pcs) — lihat
+    // tambahResepBoluKetanBesar() di inventory script v7
+    {
+      id: 'BKH_BSR', name: 'Bolu Ketan Hitam Besar',
+      basePrice: 145000, hpp: 73206,
+    },
+    // ── Banana Bread (10 Okt 2026) ─────────────────────────────
+    // hpp = fallback; di-sync live dari Resep BOM lewat BOM_NAME. Mini slice
+    // sudah termasuk 1 cup (Cup Banana Bread) di resepnya.
+    { id: 'BB_MS',   name: 'Banana Bread Mini Slice',        basePrice: 12000, hpp: 5500 },
+    { id: 'BB_MSC',  name: 'Banana Bread Mini Slice Cheese', basePrice: 15000, hpp: 5194 },
+    { id: 'BB_20',   name: 'Banana Bread 20x10',             basePrice: 60000, hpp: 24360 },
+    { id: 'BB_CH20', name: 'Banana Bread Cheese 20x10',      basePrice: 85000, hpp: 37538 },
+  ],
+  sb: [
+    // HPP turun Rp750/pcs sejak 24 Jul 2026: Paperbag dikeluarkan dari
+    // resep tiap roti, sekarang dicatat terpisah sebagai item sendiri
+    // di bawah (lihat hapusPaperbagDariSaltBread() di inventory v8).
+    { id: 'SB_ORI', name: 'Salt Bread Original',         basePrice: 17000, hpp: 6076 },
+    { id: 'SB_GAR', name: 'Salt Bread Garlic',           basePrice: 19000, hpp: 6156 },
+    { id: 'SB_CHO', name: 'Salt Bread Double Choco',     basePrice: 22000, hpp: 7780 },
+    { id: 'SB_UBE', name: 'Salt Bread Ube',              basePrice: 24000, hpp: 7621 },
+    { id: 'SB_QUA', name: 'Salt Bread Quattro Formaggi', basePrice: 24000, hpp: 7928 },
+    { id: 'SB_COC', name: 'Salt Bread Chili Oil Cheese', basePrice: 25000, hpp: 9519 },
+    // Varian baru (10 Okt 2026) — wajib disertai packaging seperti Salt Bread lain
+    { id: 'SB_CRN', name: 'Salt Bread Cranberry Cheese',    basePrice: 28000, hpp: 11678 },
+    { id: 'SB_GCC', name: 'Salt Bread Garlic Cheese Cream', basePrice: 28000, hpp: 10498 },
+    // Varian baru (18 Okt 2026)
+    { id: 'SB_BSM', name: 'Salt Bread Black Sesame',        basePrice: 22000, hpp: 8351 },
+    { id: 'SB_MTH', name: 'Salt Bread Matah',               basePrice: 29500, hpp: 12947 },
+    // ── Packaging (24 Jul 2026) ──────────────────────────────
+    // Harga jual Rp0: tidak dibebankan ke pembeli, jadi TIDAK masuk
+    // omzet (guard isPackaging di calcOrderTotal).
+    // Tapi hpp DIISI dengan biaya bahan aslinya, supaya biaya box &
+    // paperbag ikut terhitung di margin per order — konsisten dengan
+    // bahan lain yang biayanya juga masuk HPP meski dibeli via
+    // Pengeluaran. Nilai di bawah cuma fallback; kalau device
+    // tersambung ke Sistem HPP, angkanya di-sync otomatis dari
+    // Master Bahan lewat resep Paperbag/Box A/B/C.
+    { id: 'PKG_PB', name: 'Paperbag', basePrice: 0, hpp: 650, isPackaging: true, note: 'Tidak dibebankan ke pembeli' },
+    { id: 'PKG_BA', name: 'Box A',    basePrice: 0, hpp: 2250, isPackaging: true, note: 'Isi 3' },
+    { id: 'PKG_BB', name: 'Box B',    basePrice: 0, hpp: 3300, isPackaging: true, note: 'Isi 4' },
+    { id: 'PKG_BC', name: 'Box C',    basePrice: 0, hpp: 3500, isPackaging: true, note: 'Isi 5-6' },
   ],
   // ── B2B SALT BREAD (Jul 2026) ──────────────────────────────
-  // Harga tier: 12–23 pcs = disc 20%, 24+ pcs = disc 30%.
-  // minQty: 12 → klik pertama langsung masuk 12 pcs, tambah bebas 1-1,
-  // kurang di bawah 12 = item dihapus dari cart.
+  // Harga: 6–23 pcs = basePrice (disc 20%), 24+ pcs = tier (disc 30%).
+  // 10 Okt 2026: minimal order diturunkan 12 → 6 pcs. Tier lama {qty:12}
+  // dibuang karena harganya identik dengan basePrice — kalau dibiarkan,
+  // label "harga bundling 12+ pcs" akan muncul padahal tidak ada diskon tambahan.
+  // 19 Okt 2026: minimal order diturunkan 6 → 1 pcs (minQty: 1) — klik
+  // pertama masuk 1 pcs seperti produk biasa.
   // HPP = HPP retail MINUS packaging (Paperbag 0.3 + Stamp 1 +
   // Kertas Wrapper 0.25 = Rp 1.042/pcs) — resep B2B di sheet Resep BOM
   // tidak berisi bahan packaging (lihat tambahResepB2BSaltBread di
   // inventory script v7).
   b2bsalt: [
-    { id: 'SBB_ORI', name: 'SB B2B Original',          basePrice: 14000, hpp: 5778,
-      minQty: 12, tiers: [ { qty: 24, price: 13000 }, { qty: 12, price: 14000 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_GAR', name: 'SB B2B Garlic',            basePrice: 15500, hpp: 4806,
-      minQty: 12, tiers: [ { qty: 24, price: 13500 }, { qty: 12, price: 15500 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_CHO', name: 'SB B2B Double Choco',      basePrice: 18000, hpp: 5739,
-      minQty: 12, tiers: [ { qty: 24, price: 15500 }, { qty: 12, price: 18000 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_UBE', name: 'SB B2B Ube',               basePrice: 19500, hpp: 7323,
-      minQty: 12, tiers: [ { qty: 24, price: 17000 }, { qty: 12, price: 19500 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_QUA', name: 'SB B2B Quattro Formaggi',  basePrice: 19500, hpp: 7629,
-      minQty: 12, tiers: [ { qty: 24, price: 17000 }, { qty: 12, price: 19500 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_COC', name: 'SB B2B Chilli Oil Cheese', basePrice: 20000, hpp: 9220,
-      minQty: 12, tiers: [ { qty: 24, price: 17500 }, { qty: 12, price: 20000 } ],
-      note: 'Minimal order 12 pcs' },
-    { id: 'SBB_COI', name: 'SB B2B Chilli Oil',        basePrice: 17500, hpp: 7726,
-      minQty: 12, tiers: [ { qty: 24, price: 15500 }, { qty: 12, price: 17500 } ],
-      note: 'Minimal order 12 pcs' },
+    { id: 'SBB_ORI', name: 'SB B2B Original',          basePrice: 14000, hpp: 5784,
+      minQty: 1, tiers: [ { qty: 24, price: 13000 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_GAR', name: 'SB B2B Garlic',            basePrice: 15500, hpp: 5864,
+      minQty: 1, tiers: [ { qty: 24, price: 13500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_CHO', name: 'SB B2B Double Choco',      basePrice: 18000, hpp: 7488,
+      minQty: 1, tiers: [ { qty: 24, price: 15500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_UBE', name: 'SB B2B Ube',               basePrice: 19500, hpp: 7329,
+      minQty: 1, tiers: [ { qty: 24, price: 17000 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_QUA', name: 'SB B2B Quattro Formaggi',  basePrice: 19500, hpp: 7635,
+      minQty: 1, tiers: [ { qty: 24, price: 17000 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_COC', name: 'SB B2B Chilli Oil Cheese', basePrice: 20000, hpp: 9226,
+      minQty: 1, tiers: [ { qty: 24, price: 17500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    // Varian baru (10 Okt 2026): 6–23 pcs = harga dasar, 24+ pcs = harga tier
+    { id: 'SBB_CRN', name: 'SB B2B Cranberry Cheese',    basePrice: 23000, hpp: 11386,
+      minQty: 1, tiers: [ { qty: 24, price: 20500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    { id: 'SBB_GCC', name: 'SB B2B Garlic Cheese Cream', basePrice: 20500, hpp: 10206,
+      minQty: 1, tiers: [ { qty: 24, price: 18500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
+    // Varian baru (18 Okt 2026): 6–23 pcs Rp16.000, 24+ pcs Rp14.500
+    { id: 'SBB_BSM', name: 'SB B2B Black Sesame', basePrice: 16000, hpp: 8058,
+      minQty: 1, tiers: [ { qty: 24, price: 14500 } ],
+      note: 'Lebih murah mulai 24 pcs' },
   ],
   b2b: [
     {
       id: 'MT',     name: 'Mousse Tiramisu',
-      basePrice: 35000, hpp: 15742,
+      basePrice: 35000, hpp: 15344,
       // Multi-tier: array diurutkan dari qty tertinggi ke terendah.
       // calcItemPrice akan pilih tier pertama yang qty-nya terpenuhi.
       tiers: [
@@ -867,13 +1414,78 @@ const PRODUCTS = {
     // HPP per pcs = HPP batch LSMk3 ÷ yield (Ichigo & Heavenly yield 8, MC & Brownie Biscoe yield 10)
     { id: 'IMB',    name: 'Ichigo Matcha Biscoe',             basePrice: 38000,  hpp: 14271 },
     { id: 'HCB',    name: 'Heavenly Choco Biscoe',            basePrice: 38000,  hpp: 13433 },
-    { id: 'BRW',    name: 'Brownie Biscoe',                   basePrice: 19000,  hpp: 15577 },
+    // Brownie Biscoe: resep direvisi 24 Jul 2026 (lihat
+    // updateResepBrownieBiscoe() di inventory script v8)
+    { id: 'BRW',    name: 'Brownie Biscoe',                   basePrice: 19000,  hpp: 12261 },
     { id: 'MC_BIS', name: 'Mille Crepe Tiramisu Biscoe',      basePrice: 28000,  hpp: 14314 },
     { id: 'MC_BON', name: 'Mille Crepe Tiramisu Bonfire',     basePrice: 215000, hpp: 145758 },
     { id: 'MC_KYO', name: 'Mille Crepe Tiramisu Kantor Yoyo', basePrice: 285000, hpp: 160758 },
     { id: 'MC_SBO', name: 'Mille Crepe Strawberry Bonfire',   basePrice: 218500, hpp: 113719 },
   ]
 };
+
+// ── Produk yang sudah TIDAK dijual (27 Okt 2026) ─────────────────
+// Tidak tampil di kasir, tapi tetap dikenali supaya order LAMA yang berisi
+// produk ini masih bisa dibuka, diedit, dicetak, diekspor, dan masuk grup
+// yang benar di halaman Rekap. Resepnya di Inventory (Resep BOM &
+// PRODUK_MAP) sengaja TIDAK dihapus — masih dipakai saat order lama
+// diedit/dihapus (stok bahannya dikembalikan).
+const PRODUK_PENSIUN = [
+  { id: 'SB_COI',  grup: 'sb',      name: 'Salt Bread Chili Oil', basePrice: 22000, hpp: 8024 },
+  { id: 'SBB_COI', grup: 'b2bsalt', name: 'SB B2B Chilli Oil',    basePrice: 17500, hpp: 7732,
+    minQty: 1, tiers: [ { qty: 24, price: 15500 } ] },
+];
+
+// ─── v15 (18 Okt 2026): AMBIL DATA DARI APPS SCRIPT, TAHAN BANTING ──
+// Apps Script kadang membalas HALAMAN ERROR (HTML), bukan data — saat server
+// sibuk melayani batch order, waktu habis, atau URL kepanjangan. Dulu
+// langsung res.json(), jadi yang muncul pesan membingungkan
+// "Unexpected token '<' … is not valid JSON". Sekarang: ada batas waktu,
+// dicoba ulang otomatis (jeda 1,5 lalu 4 detik), dan pesannya jelas.
+async function ambilJSON(url, opsi) {
+  opsi = opsi || {};
+  const percobaan = opsi.percobaan != null ? opsi.percobaan : 3;
+  const batasMs = opsi.batasMs || 25000;
+  let galat = null;
+  for (let i = 0; i < percobaan; i++) {
+    if (i > 0) await new Promise(r => setTimeout(r, i === 1 ? 1500 : 4000));
+    const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), batasMs) : null;
+    try {
+      const res = await fetch(url, ctrl ? { signal: ctrl.signal } : undefined);
+      const teks = await res.text();
+      let data = null;
+      try { data = JSON.parse(teks); } catch (e) { data = null; }
+      if (data) {
+        if (data.status === 'error' && /sibuk|lock|timed out|too many/i.test(String(data.message || ''))) {
+          galat = new Error('Server sedang sibuk melayani order');
+          continue;
+        }
+        return data;
+      }
+      galat = new Error(jelaskanBalasanServer(res.status, teks));
+      // Tidak akan berubah kalau diulang → berhenti mencoba
+      if (res.status === 400 || res.status === 414 || /accounts\.google\.com|ServiceLogin/i.test(teks)) break;
+    } catch (e) {
+      galat = new Error(e && e.name === 'AbortError'
+        ? 'Server tidak menjawab dalam ' + Math.round(batasMs / 1000) + ' detik'
+        : (navigator.onLine ? 'Tidak bisa terhubung ke server' : 'Perangkat sedang offline'));
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+  throw galat || new Error('Gagal mengambil data');
+}
+
+function jelaskanBalasanServer(status, teks) {
+  const t = String(teks || '');
+  if (/too many (simultaneous|times)|invoked too many/i.test(t)) return 'Server Google sedang dibatasi karena terlalu banyak permintaan';
+  if (/exceeded maximum execution time|timed out|timeout/i.test(t)) return 'Server butuh waktu terlalu lama';
+  if (status === 400 || status === 414) return 'Permintaan terlalu besar untuk server (HTTP ' + status + ')';
+  if (/accounts\.google\.com|ServiceLogin/i.test(t)) return 'Script meminta login — cek Deploy: "Who has access" harus Anyone';
+  if (/function not found|tidak ditemukan/i.test(t)) return 'Script belum di-deploy ulang';
+  return 'Server membalas halaman error, bukan data (HTTP ' + status + ')';
+}
 
 // ─── CONFIG ────────────────────────────────────────────────────
 // Setelah deploy Apps Script, paste URL-nya di sini:
@@ -900,7 +1512,6 @@ const BOM_NAME = {
   SB_UBE: 'Salt Bread Ube',
   SB_QUA: 'Salt Bread Quattro Formaggi',
   SB_COC: 'Salt Bread Chilli Oil Cheese',
-  SB_COI: 'Salt Bread Chilli Oil',
   // B2B Salt Bread (resep tanpa packaging di sheet Resep BOM)
   SBB_ORI: 'SB B2B Original',
   SBB_GAR: 'SB B2B Garlic',
@@ -908,8 +1519,28 @@ const BOM_NAME = {
   SBB_UBE: 'SB B2B Ube',
   SBB_QUA: 'SB B2B Quattro Formaggi',
   SBB_COC: 'SB B2B Chilli Oil Cheese',
-  SBB_COI: 'SB B2B Chilli Oil',
+  // SB_COI / SBB_COI (Chili Oil): tidak dijual lagi sejak 27 Okt 2026 — lihat PRODUK_PENSIUN
+  // Produk baru Okt 2026 (nama BOM = nama resep di sheet Resep BOM)
+  SB_CRN:  'Salt Bread Cranberry Cheese',
+  SB_GCC:  'Salt Bread Garlic Cheese Cream',
+  SBB_CRN: 'SB B2B Cranberry Cheese',
+  SBB_GCC: 'SB B2B Garlic Cheese Cream',
+  BB_MS:   'Slice Banana Bread',
+  BB_MSC:  'Slice Banana Bread with Cheese',
+  BB_20:   'Banana Bread 20x10',
+  BB_CH20: 'Banana Bread with Cheese 20x10',
+  // Produk baru 18 Okt 2026
+  SB_BSM:  'Salt Bread Black Sesame',
+  SBB_BSM: 'SB B2B Black Sesame',
+  SB_MTH:  'Salt Bread Matah',
   BKH:    'Bolu Ketan Hitam 15cm',
+  BKH_BSR: 'Bolu Ketan Hitam Besar',
+  // Packaging: resep 1 Pcs bahan terkait (dibuat oleh
+  // tambahResepPackagingPOS() di inventory script v8)
+  PKG_PB: 'Paperbag',
+  PKG_BA: 'Box A',
+  PKG_BB: 'Box B',
+  PKG_BC: 'Box C',
   MT:     'Mouse Tiramisu',
   IMB:    'Ichigo Matcha Biscoe',
   HCB:    'Heavenly Choco Biscoe',
@@ -927,9 +1558,10 @@ function applyHPPValues(hppMap) {
   const idx = {};
   Object.entries(hppMap).forEach(([k, v]) => { idx[String(k).toLowerCase().trim()] = v; });
   let updated = 0;
-  ['menu', 'b2bsalt', 'b2b'].forEach(cat => {
+  ['dc', 'sb', 'b2bsalt', 'b2b'].forEach(cat => {
     PRODUCTS[cat].forEach(p => {
-      if (p.isPackaging) return;
+      // Packaging TIDAK di-skip lagi: biayanya sekarang ikut dihitung
+      // di margin per order, jadi HPP-nya perlu ikut ter-sync juga.
       const bomName = BOM_NAME[p.id];
       if (!bomName) return;
       const val = idx[bomName.toLowerCase()];
@@ -955,8 +1587,7 @@ function applyHPPCache() {
 async function loadHPPLive(tampilkanNotif) {
   if (!INVENTORY_URL) return;
   try {
-    const res = await fetch(INVENTORY_URL + '?action=hppProduk');
-    const data = await res.json();
+    const data = await ambilJSON(INVENTORY_URL + '?action=hppProduk', { percobaan: 2 });
     if (data && data.status === 'ok' && data.hpp) {
       const n = applyHPPValues(data.hpp);
       safeStorage.setItem('ls_hpp_cache', JSON.stringify({ t: Date.now(), hpp: data.hpp }));
@@ -985,6 +1616,29 @@ function refreshHPP() {
 
 // ─── STATE ─────────────────────────────────────────────────────
 let cart = {}; // { productId: qty }
+
+// ── v16 (3 Sep 2026): harga khusus sekali pakai untuk item Special Menu ──
+// { productId: hargaSatuanBaru }. Sengaja TIDAK disimpan ke localStorage
+// dan TIDAK menyentuh customProducts — begitu order dikirim atau keranjang
+// dikosongkan, override-nya hilang dan item kembali ke harga aslinya.
+// Dibatasi hanya untuk item Special Menu (isSpecial) supaya logika
+// bundling Dubai Chewi dan tier B2B Salt Bread tidak bisa ikut tertimpa.
+let cartHargaOverride = {};
+
+// Harga satuan yang BERLAKU untuk item ini sekarang (override kalau ada,
+// selain itu harga normal produk). Satu pintu supaya tidak ada tempat
+// yang lupa memperhitungkan override.
+function hargaSatuanBerlaku(id) {
+  const p = getProduct(id);
+  if (!p) return 0;
+  return bolehUbahHarga(p) && cartHargaOverride[id] != null
+    ? cartHargaOverride[id]
+    : p.basePrice;
+}
+
+function bolehUbahHarga(p) {
+  return !!(p && p.isSpecial);
+}
 let kategori = 'Paid';
 let orders = JSON.parse(safeStorage.getItem('ls_orders_littlespoon') || '[]');
 let cashierName = safeStorage.getItem('ls_cashier_name') || '';
@@ -993,12 +1647,25 @@ let cashierName = safeStorage.getItem('ls_cashier_name') || '';
 const fmt = n => 'Rp ' + n.toLocaleString('id-ID');
 
 function getProduct(id) {
-  return [...PRODUCTS.menu, ...PRODUCTS.b2bsalt, ...PRODUCTS.b2b].find(p => p.id === id);
+  // v13: customProducts (Special Menu) ikut dicari supaya nama & HPP
+  // order lama tetap terbaca setelah refresh.
+  // 27 Okt 2026: + PRODUK_PENSIUN (produk yang sudah tidak dijual).
+  return [...PRODUCTS.dc, ...PRODUCTS.sb, ...PRODUCTS.b2bsalt, ...PRODUCTS.b2b,
+          ...(typeof customProducts !== 'undefined' ? customProducts : []),
+          ...PRODUK_PENSIUN].find(p => p.id === id);
 }
 
 function calcItemPrice(id, qty) {
   const p = getProduct(id);
   if (!p) return 0;
+
+  // Harga khusus sekali pakai (Special Menu) menang atas harga normal.
+  // Ditaruh paling atas supaya SEMUA jalur ikut: total keranjang, omzet
+  // order, nilai item yang dikirim ke Sheets, dan struk/tag cetak.
+  if (bolehUbahHarga(p) && cartHargaOverride[id] != null) {
+    return qty * cartHargaOverride[id];
+  }
+
   if (p.tiers) {
     // Multi-tier per-pcs (mis. Mousse Tiramisu): tiers sudah diurutkan
     // dari qty tertinggi ke terendah — pakai tier pertama yang qty-nya cukup
@@ -1041,20 +1708,72 @@ function calcOrderTotal(cartObj, kat) {
   }, 0);
 }
 
-function saveOrders() {
+// ── 27 Okt 2026: daftar order yang sudah dihapus DI PERANGKAT INI ──
+// Disimpan terpisah dan SELALU dibaca ulang dari penyimpanan setiap kali
+// daftar order disimpan. Tab/file POS lain di browser yang sama (mis. POS
+// biasa & POS Android terbuka bersamaan) yang datanya belum ikut terhapus
+// jadi tidak bisa "menghidupkan" lagi order yang sudah dihapus.
+const LS_ORDER_DIHAPUS = 'ls_order_dihapus';
+const SIMPAN_DIHAPUS_LOKAL_MS = 60 * 24 * 60 * 60 * 1000;
+
+function bacaDihapusLokal() {
+  try {
+    const d = JSON.parse(safeStorage.getItem(LS_ORDER_DIHAPUS) || '[]');
+    return Array.isArray(d) ? d : [];
+  } catch (e) { return []; }
+}
+
+function catatDihapusLokal(ids) {
+  const now = Date.now();
+  const daftar = bacaDihapusLokal().filter(d => d && (now - (d.ts || 0)) < SIMPAN_DIHAPUS_LOKAL_MS);
+  const ada = new Set(daftar.map(d => String(d.id)));
+  [].concat(ids).forEach(id => {
+    const k = String(id == null ? '' : id).trim();
+    if (k && !ada.has(k)) { daftar.push({ id: k, ts: now }); ada.add(k); }
+  });
+  safeStorage.setItem(LS_ORDER_DIHAPUS, JSON.stringify(daftar));
+}
+
+// Urutan order = waktu dibuat (angka di Order ID). ID tanpa angka waktu di depan.
+function waktuOrder(o) {
+  const m = String((o && o.id) || '').match(/(\d{12,})/);
+  return m ? Number(m[1]) : 0;
+}
+
+function saveOrders(opsi) {
+  // 27 Okt 2026:
+  // (1) GABUNG dengan isi penyimpanan terbaru — order yang baru ditambahkan
+  //     tab/file POS lain di browser yang sama tidak ikut tertimpa hilang.
+  //     opsi.timpa = true dipakai kalau memang sengaja mengosongkan/memangkas.
+  // (2) BUANG order yang sudah dihapus (daftar dihapus dibaca ulang tiap kali).
+  if (!(opsi && opsi.timpa)) {
+    let diSimpan = [];
+    try { diSimpan = JSON.parse(safeStorage.getItem('ls_orders_littlespoon') || '[]'); } catch (e) { diSimpan = []; }
+    if (Array.isArray(diSimpan) && diSimpan.length) {
+      const ada = new Set(orders.map(o => String(o.id)));
+      const tambahan = diSimpan.filter(o => o && o.id != null && !ada.has(String(o.id)));
+      if (tambahan.length) {
+        orders = orders.concat(tambahan).sort((a, b) => waktuOrder(a) - waktuOrder(b));
+      }
+    }
+  }
+  const dihapus = new Set(bacaDihapusLokal().map(d => String(d.id)));
+  if (dihapus.size) orders = orders.filter(o => !dihapus.has(String(o.id)));
   safeStorage.setItem('ls_orders_littlespoon', JSON.stringify(orders));
 }
 
-function showNotif(msg) {
+function showNotif(msg, lamaMs) {
   const el = document.getElementById('notif');
+  if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2000);
+  clearTimeout(showNotif._t);
+  showNotif._t = setTimeout(() => el.classList.remove('show'), lamaMs || 2000);
 }
 
 // ─── RENDER PRODUCTS ───────────────────────────────────────────
 function renderProducts() {
-  ['menu', 'b2bsalt', 'b2b'].forEach(cat => {
+  ['dc', 'sb', 'b2bsalt', 'b2b'].forEach(cat => {
     const grid = document.getElementById('grid-' + cat);
     if (!grid) return;
     grid.innerHTML = '';
@@ -1077,6 +1796,33 @@ function renderProducts() {
       card.onclick = () => addToCart(p.id);
       grid.appendChild(card);
     });
+  });
+  renderSpecialGrid();
+}
+
+// Grid Special Menu: tombol pembuat item + daftar item special tersimpan
+function renderSpecialGrid() {
+  const grid = document.getElementById('grid-special');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const btn = document.createElement('button');
+  btn.className = 'spc-card-btn';
+  btn.textContent = '✨ Buat item special baru';
+  btn.onclick = toggleSpc;
+  grid.appendChild(btn);
+
+  (typeof customProducts !== 'undefined' ? customProducts : []).forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    card.innerHTML =
+      '<div class="name">' + escapeHtmlRnD(p.name) + '</div>' +
+      '<div class="price">' + (p.basePrice === 0
+        ? '<span style="color:var(--sage);">Gratis</span>' : fmt(p.basePrice) + '/pcs') + '</div>' +
+      (p.note ? '<div class="bundle-note">✨ ' + escapeHtmlRnD(p.note) + '</div>' : '');
+    card.onclick = () => addToCart(p.id);
+    card.oncontextmenu = (ev) => { ev.preventDefault(); hapusCustomProduct(p.id); };
+    grid.appendChild(card);
   });
 }
 
@@ -1124,7 +1870,74 @@ function setQty(id, delta) {
 
 function removeFromCart(id) {
   delete cart[id];
+  delete cartHargaOverride[id];   // buang juga harga khususnya
   renderCart();
+}
+
+// ── Ubah harga satuan item Special Menu untuk order ini saja ──
+// customProducts (daftar item special tersimpan) TIDAK disentuh sama
+// sekali, jadi order berikutnya kembali ke harga aslinya.
+function ubahHargaItem(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (!bolehUbahHarga(p)) {
+    showNotif('⚠️ Harga khusus hanya untuk item Special Menu');
+    return;
+  }
+
+  const sekarang = hargaSatuanBerlaku(id);
+  const jawab = prompt(
+    'Harga satuan untuk "' + p.name + '" di order ini\n\n' +
+    'Harga asli item : ' + fmt(p.basePrice) + '\n' +
+    'HPP per pcs     : ' + fmt(p.hpp || 0) + '\n\n' +
+    'Kosongkan lalu OK untuk kembali ke harga asli.',
+    String(sekarang)
+  );
+  if (jawab === null) return;               // tekan Batal — tidak ada perubahan
+
+  const teks = String(jawab).trim();
+  if (teks === '') {                        // dikosongkan = reset
+    resetHargaItem(id);
+    return;
+  }
+
+  // Terima "35.000", "35000", atau "35,000" — ambil angkanya saja.
+  // Kalau setelah disaring tidak tersisa satu digit pun (mis. user mengetik
+  // "abc"), itu input SALAH — bukan harga nol. Dibedakan tegas supaya tidak
+  // ada item yang diam-diam jadi gratis karena salah ketik.
+  const digit = teks.replace(/[^\d]/g, '');
+  if (digit === '') {
+    showNotif('⚠️ Harga tidak valid — tidak ada yang diubah');
+    return;
+  }
+  const angka = parseInt(digit, 10);
+  if (!isFinite(angka) || angka < 0) {
+    showNotif('⚠️ Harga tidak valid — tidak ada yang diubah');
+    return;
+  }
+
+  if (angka === p.basePrice) {
+    resetHargaItem(id);                     // sama dengan harga asli = tidak perlu override
+    return;
+  }
+
+  cartHargaOverride[id] = angka;
+  renderCart();
+
+  const hpp = Number(p.hpp) || 0;
+  if (hpp > 0 && angka < hpp) {
+    // Diberi tahu, bukan dilarang — kadang memang sengaja rugi (sample, ganti rugi).
+    showNotif('⚠️ Harga ' + fmt(angka) + ' DI BAWAH HPP ' + fmt(hpp));
+  } else {
+    showNotif('✓ Harga khusus ' + fmt(angka) + ' — hanya untuk order ini');
+  }
+}
+
+function resetHargaItem(id) {
+  if (cartHargaOverride[id] == null) { renderCart(); return; }
+  delete cartHargaOverride[id];
+  renderCart();
+  showNotif('✓ Kembali ke harga asli item');
 }
 
 function renderCart() {
@@ -1172,11 +1985,26 @@ function renderCart() {
           return parts.join(' + ');
         })()
       : '';
+
+    // Item Special Menu boleh diubah harganya khusus order ini.
+    const bisaUbah = bolehUbahHarga(p);
+    const adaOverride = bisaUbah && cartHargaOverride[id] != null;
+    const subHarga = bisaUbah
+      ? (adaOverride
+          ? `<div class="item-sub harga-khusus">✎ Harga khusus ${fmt(cartHargaOverride[id])}/pcs `
+            + `<span class="harga-asli">(asli ${fmt(p.basePrice)})</span> `
+            + `<button class="btn-reset-harga" onclick="resetHargaItem('${id}')">kembalikan</button></div>`
+          : `<div class="item-sub">${qty} pcs × ${fmt(p.basePrice)}</div>`)
+      : '';
+
     return `
       <div class="order-item">
         <div style="flex:1">
-          <div class="item-name">${p.name}</div>
+          <div class="item-name">${p.name}${bisaUbah
+            ? ` <button class="btn-ubah-harga" onclick="ubahHargaItem('${id}')" title="Ubah harga untuk order ini">✎ harga</button>`
+            : ''}</div>
           ${unitDesc ? `<div class="item-sub">${unitDesc}</div>` : ''}
+          ${subHarga}
         </div>
         <div class="qty-ctrl">
           <button onclick="setQty('${id}',-1)">−</button>
@@ -1243,6 +2071,53 @@ function setKategori(k) {
 let isAddingOrder = false; // guard cegah double-tap bikin order 2x
 let editingOrderId = null; // sedang edit order lama? (null = mode order baru)
 
+// ── v14 (30 Agu 2026): pelacak penghapusan ────────────────────
+// Masalah yang diperbaiki: saat kasir EDIT order, POS mengirim dua
+// request terpisah (delete ID lama, lalu add ID baru). Kalau request
+// delete gagal diam-diam (no-cors tidak bisa baca respons server),
+// baris lama TETAP ada di Sheets sementara baris baru ikut masuk →
+// qty & omzet dobel. verifySyncStatus lama tidak pernah menangkap ini
+// karena ID lama sudah dibuang dari array `orders`, jadi tidak ikut
+// dicek ke server.
+//
+// Solusi: setiap permintaan hapus dicatat di sini sampai server
+// benar-benar mengonfirmasi barisnya hilang.
+let pendingDeletes = (() => {
+  try { return JSON.parse(safeStorage.getItem('ls_pending_deletes') || '[]'); }
+  catch (e) { return []; }
+})();
+
+function savePendingDeletes() {
+  try { safeStorage.setItem('ls_pending_deletes', JSON.stringify(pendingDeletes)); }
+  catch (e) { /* storage penuh — abaikan */ }
+}
+
+function catatPendingDelete(orderId) {
+  const id = String(orderId || '').trim();
+  if (!id) return;
+  if (pendingDeletes.some(d => String(d.id) === id)) return; // sudah tercatat
+  pendingDeletes.push({ id: id, ts: Date.now() });
+  savePendingDeletes();
+}
+
+function selesaiPendingDelete(orderId) {
+  const id = String(orderId || '').trim();
+  const before = pendingDeletes.length;
+  pendingDeletes = pendingDeletes.filter(d => String(d.id) !== id);
+  if (pendingDeletes.length !== before) savePendingDeletes();
+}
+
+// Buang catatan yang sudah sangat tua (>14 hari). Kalau sampai selama
+// itu belum terkonfirmasi, kemungkinan besar ID-nya memang tidak
+// pernah ada di server — bukan kasus dobel.
+function bersihkanPendingDeletesLama() {
+  const batas = 14 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const before = pendingDeletes.length;
+  pendingDeletes = pendingDeletes.filter(d => (now - (d.ts || 0)) < batas);
+  if (pendingDeletes.length !== before) savePendingDeletes();
+}
+
 async function addOrder() {
   if (isAddingOrder) return; // sudah diproses, abaikan tap kedua
   isAddingOrder = true;
@@ -1251,9 +2126,41 @@ async function addOrder() {
   const customer = document.getElementById('customerInput').value.trim() || 'Customer';
   if (Object.keys(cart).length === 0) return;
 
+  // ── Validasi packaging (24 Jul 2026) ──────────────────────────
+  // Varian Salt Bread retail wajib disertai salah satu packaging
+  // (Paperbag / Box A / Box B / Box C). B2B Salt Bread dikecualikan
+  // karena memang dikirim tanpa packaging satuan.
+  // Cek dibuat dinamis dari grup 'sb', jadi kalau nanti ada varian
+  // baru, otomatis ikut tervalidasi tanpa perlu edit fungsi ini.
+  const idsDiCart = Object.keys(cart);
+  const adaSaltBreadRetail = idsDiCart.some(id =>
+    PRODUCTS.sb.some(p => p.id === id && !p.isPackaging) ||
+    PRODUK_PENSIUN.some(p => p.id === id && p.grup === 'sb'));
+  const adaPackaging = idsDiCart.some(id => {
+    const p = getProduct(id);
+    return p && p.isPackaging;
+  });
+  if (adaSaltBreadRetail && !adaPackaging) {
+    const lanjut = confirm(
+      '⚠️ Order berisi Salt Bread tapi belum ada packaging.\n\n' +
+      'Pilih salah satu: Paperbag, Box A, Box B, atau Box C.\n\n' +
+      'Tetap lanjutkan tanpa packaging?'
+    );
+    if (!lanjut) {
+      isAddingOrder = false; // lepas guard supaya bisa langsung tambah packaging
+      return;
+    }
+  }
+
   const items = Object.entries(cart).map(([id, qty]) => ({
     id, qty,
     name: getProduct(id).name,
+    // v13: HPP dibekukan per item. Untuk item Special Menu ini WAJIB —
+    // produknya tidak ada di BOM_NAME jadi tidak bisa di-sync ulang nanti.
+    hpp: getProduct(id)?.hpp || 0,
+    // v16: dicatat supaya saat order ini di-EDIT nanti, harga khususnya
+    // ikut dipulihkan ke keranjang — bukan diam-diam balik ke harga asli.
+    hargaOverride: (cartHargaOverride[id] != null ? cartHargaOverride[id] : null),
     total: calcItemPrice(id, qty)
   }));
 
@@ -1265,8 +2172,9 @@ async function addOrder() {
   // stok lagi). ID baru dipakai karena server men-skip Order ID duplikat.
   const oldId = editingOrderId;
   if (oldId) {
+    tandaiOrderDihapus(oldId);   // 27 Okt 2026: ID lama tidak bisa hidup lagi
     orders = orders.filter(o => String(o.id) !== String(oldId));
-    deleteOrderFromSheets(oldId);
+    deleteOrderFromSheets(oldId, 'edit');
   }
 
   const order = {
@@ -1285,6 +2193,7 @@ async function addOrder() {
   saveOrders();
 
   cart = {};
+  cartHargaOverride = {};   // harga khusus hanya berlaku untuk order yang baru dikirim
   document.getElementById('customerInput').value = '';
   renderCart();
   renderLog();
@@ -1310,10 +2219,25 @@ function editOrder(id) {
     if (!confirm('Keranjang saat ini akan diganti dengan isi order tersebut. Lanjutkan?')) return;
   }
   cart = {};
+  cartHargaOverride = {};
   let adaProdukHilang = false;
   o.items.forEach(i => {
-    if (getProduct(i.id)) cart[i.id] = i.qty;
-    else adaProdukHilang = true;
+    const prod = getProduct(i.id);
+    if (!prod) { adaProdukHilang = true; return; }
+    cart[i.id] = i.qty;
+    // Pulihkan harga khusus order ini. Order lama (sebelum v16) tidak punya
+    // field hargaOverride — untuk itu dihitung mundur dari total/qty, supaya
+    // mengedit order lama tidak diam-diam mengembalikan harga ke normal.
+    if (bolehUbahHarga(prod)) {
+      if (i.hargaOverride != null) {
+        cartHargaOverride[i.id] = Number(i.hargaOverride);
+      } else if (i.qty > 0) {
+        const satuanLama = Math.round(Number(i.total) / i.qty);
+        if (isFinite(satuanLama) && satuanLama !== prod.basePrice) {
+          cartHargaOverride[i.id] = satuanLama;
+        }
+      }
+    }
   });
   if (adaProdukHilang) {
     showNotif('⚠️ Sebagian item order lama tidak dikenal produk sekarang — cek ulang isi keranjang');
@@ -1334,6 +2258,7 @@ function editOrder(id) {
 
 function cancelEdit() {
   cart = {};
+  cartHargaOverride = {};
   document.getElementById('customerInput').value = '';
   resetEditUI();
   renderCart();
@@ -1379,10 +2304,22 @@ function formatDateID(isoDate) {
   return `${d} ${bulan[mIdx]} ${y}`;
 }
 
+// 27 Okt 2026: tanggal hari ini dalam format orderDate ("27 Okt 2026")
+function tanggalHariIniID() {
+  return formatDateID(new Date().toLocaleDateString('en-CA'));
+}
+
+// true kalau order ini untuk hari ini (bukan pre-order hari lain)
+function orderUntukHariIni(o) {
+  const t = String((o && o.orderDate) || '').trim();
+  return !t || t === tanggalHariIniID() || t === new Date().toLocaleDateString('id-ID');
+}
+
 // ─── SYNC KE GOOGLE SHEETS ─────────────────────────────────────
 // ─── ANTRIAN SYNC (untuk retry otomatis jika gagal/offline) ────
 let syncQueue = JSON.parse(safeStorage.getItem('ls_sync_queue') || '[]');
 let isSyncing = false;
+let perluMuatUlangAntrian = false;   // 27 Okt 2026: tab lain mengubah antrian saat sync berjalan
 
 // ── AUTO-CLEANUP SEKALI JALAN ──
 // Versi sebelumnya sempat kena bug: fetch tanpa no-cors gagal baca respons
@@ -1432,10 +2369,60 @@ function saveSyncQueue() {
   safeStorage.setItem('ls_sync_queue', JSON.stringify(syncQueue));
 }
 
+// 27 Okt 2026: helper antrian
+function idJob(j) {
+  return String((j && ((j.rows && j.rows[0] && j.rows[0].orderId) || j.orderId)) || '');
+}
+function kunciJob(j) {
+  return ((j && j.action) || 'add') + '|' + idJob(j) + '|' + String((j && j._addedAt) || '');
+}
+function adaJob(aksi, orderId) {
+  const id = String(orderId);
+  return syncQueue.some(j => ((j.action || 'add') === aksi) && idJob(j) === id);
+}
+
 function queuePush(payload) {
+  // 27 Okt 2026: job yang sama (aksi + Order ID) tidak diantrikan dua kali.
+  // Dulu verifikasi tiap 2 menit bisa menumpuk kiriman ulang order yang sama.
+  const aksi = (payload && payload.action) || 'add';
+  const id = idJob(payload);
+  if (id && adaJob(aksi, id)) { updateSyncStatus(); return; }
   syncQueue.push({ ...payload, _addedAt: Date.now(), _attempts: 0 });
   saveSyncQueue();
   updateSyncStatus();
+}
+
+// Order yang dihapus/diedit: kiriman "add"-nya yang masih antre dibuang,
+// supaya tidak terkirim belakangan dan memasukkan order itu lagi.
+function buangAntrianAdd(orderId) {
+  const id = String(orderId);
+  const sebelum = syncQueue.length;
+  syncQueue = syncQueue.filter(j => !(((j.action || 'add') === 'add') && idJob(j) === id));
+  if (syncQueue.length !== sebelum) { saveSyncQueue(); updateSyncStatus(); }
+}
+
+function tandaiOrderDihapus(orderId) {
+  catatDihapusLokal(orderId);
+  buangAntrianAdd(orderId);
+}
+
+// POST no-cors dengan batas waktu. Dulu fetch yang menggantung (sinyal jelek)
+// membuat antrian macet sampai halaman dimuat ulang.
+async function kirimPost(url, payload, batasMs) {
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = ctrl ? setTimeout(() => ctrl.abort(), batasMs || 45000) : null;
+  try {
+    const opsi = {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    };
+    if (ctrl) opsi.signal = ctrl.signal;
+    await fetch(url, opsi);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function processSyncQueue() {
@@ -1444,29 +2431,35 @@ async function processSyncQueue() {
   if (!navigator.onLine) return; // jangan coba kalau jelas-jelas offline
 
   isSyncing = true;
-  while (syncQueue.length > 0) {
-    const job = syncQueue[0];
-    try {
-      await fetch(url, {
-        method: 'POST',
-        mode: 'no-cors', // lihat catatan di syncOrderToSheets soal kenapa no-cors
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(job)
-      });
-      // Anggap sukses (optimistic) — proteksi anti-duplikat sebenarnya
-      // ada di server via cek Order ID, bukan di kemampuan baca respons ini.
-      markOrderUploaded(job);
-      syncQueue.shift();
-      saveSyncQueue();
-    } catch (e) {
-      job._attempts = (job._attempts || 0) + 1;
-      saveSyncQueue();
-      console.warn('Sync gagal, akan dicoba lagi:', e);
-      break; // berhenti, coba lagi nanti (jangan spam retry beruntun)
+  try {
+    while (syncQueue.length > 0) {
+      const job = syncQueue[0];
+      try {
+        // no-cors: lihat catatan di syncOrderToSheets
+        await kirimPost(url, job);
+        // Anggap sukses (optimistic) — proteksi anti-duplikat sebenarnya
+        // ada di server via cek Order ID, bukan di kemampuan baca respons ini.
+        markOrderUploaded(job);
+        // 27 Okt 2026: buang job INI (bukan sekadar elemen pertama) — antrian
+        // bisa berubah selama menunggu (order dihapus, tab lain).
+        const k = kunciJob(job);
+        syncQueue = syncQueue.filter(j => kunciJob(j) !== k);
+        saveSyncQueue();
+      } catch (e) {
+        job._attempts = (job._attempts || 0) + 1;
+        saveSyncQueue();
+        console.warn('Sync gagal, akan dicoba lagi:', e);
+        break; // berhenti, coba lagi nanti (jangan spam retry beruntun)
+      }
     }
+  } finally {
+    isSyncing = false;
+    if (perluMuatUlangAntrian) {
+      perluMuatUlangAntrian = false;
+      muatUlangDariPenyimpanan('ls_sync_queue');
+    }
+    updateSyncStatus();
   }
-  isSyncing = false;
-  updateSyncStatus();
 }
 
 // Tandai order (di localStorage) sebagai sudah ter-upload, berdasarkan
@@ -1474,6 +2467,10 @@ async function processSyncQueue() {
 function markOrderUploaded(job) {
   const orderId = job.rows && job.rows[0] ? job.rows[0].orderId : job.orderId;
   if (!orderId) return;
+  // v14: job 'delete' yang terkirim TIDAK langsung dianggap beres —
+  // no-cors tidak bisa membuktikannya. Biarkan tetap di pendingDeletes
+  // sampai verifySyncStatus memastikan barisnya benar-benar hilang.
+  if (job.action === 'delete') return;
   const o = orders.find(x => String(x.id) === String(orderId));
   if (o) {
     o.syncStatus = 'uploaded';
@@ -1505,7 +2502,7 @@ async function syncOrderToSheets(order) {
     // Harga satuan dihitung dari total aktual / qty — akurat walau kena
     // harga tier/bundling (bukan selalu basePrice normal)
     hargaSatuan: item.qty > 0 ? Math.round(item.total / item.qty) : 0,
-    hpp: getProduct(item.id)?.hpp || 0,
+    hpp: (item.hpp != null ? item.hpp : (getProduct(item.id)?.hpp || 0)),
     total: item.total,
     kategori: order.kategori,
     totalOrder: order.total,
@@ -1524,12 +2521,7 @@ async function syncOrderToSheets(order) {
     // dan bisa "insert ulang" tiap kali di-retry. Proteksi anti-duplikat
     // sekarang murni diserahkan ke server (cek Order ID sebelum insert),
     // bukan ke kemampuan client baca respons.
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
+    await kirimPost(url, payload);
     // no-cors tidak kasih tahu sukses/gagal HTTP secara pasti, tapi kalau fetch
     // tidak throw berarti request terkirim — anggap sukses (optimistic).
     // Proteksi sebenarnya ada di server (Order ID sudah pernah masuk = skip).
@@ -1545,18 +2537,18 @@ async function syncOrderToSheets(order) {
 }
 
 // ─── HAPUS ORDER DARI SHEETS ────────────────────────────────────
-async function deleteOrderFromSheets(orderId) {
+async function deleteOrderFromSheets(orderId, alasan) {
   const url = APPS_SCRIPT_URL;
   if (!url) return;
-  const payload = { action: 'delete', orderId };
+  // v14: catat DULU sebelum kirim. Kalau request gagal diam-diam,
+  // verifySyncStatus yang akan menemukannya dan mengirim ulang.
+  catatPendingDelete(orderId);
+  // 27 Okt 2026: alasan ('hapus' / 'edit') & nama kasir ikut dikirim — server
+  // v15 mencatatnya di sheet "Order Dihapus" dan menolak kiriman ulang ID ini.
+  const payload = { action: 'delete', orderId, alasan: alasan || 'hapus', kasir: cashierName || '' };
   try {
     if (!navigator.onLine) throw new Error('offline');
-    await fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
-    });
+    await kirimPost(url, payload);
   } catch (e) {
     console.warn('Hapus di Sheets gagal, dimasukkan ke antrian retry:', e);
     queuePush(payload);
@@ -1564,29 +2556,90 @@ async function deleteOrderFromSheets(orderId) {
 }
 
 // ─── SETUP SCRIPT URL ──────────────────────────────────────────
+function setupInventoryUrl() {
+  const url = prompt('Paste URL Google Apps Script INVENTORY kamu:', INVENTORY_URL);
+  if (url === null) return; // batal
+  if (!url || !url.startsWith('https://')) { showNotif('⚠️ URL tidak valid'); return; }
+  INVENTORY_URL = url;
+  safeStorage.setItem('ls_inv_url', url);
+  showNotif('✓ URL Inventory tersimpan — memuat ulang…');
+  rndBahanList = [];
+  rndLimit = null;
+  loadRnDBahan();
+  loadRnDLimit();
+  loadHPPLive();
+}
+
 function setupScriptUrl() {
   const url = prompt('Paste URL Google Apps Script kamu:', APPS_SCRIPT_URL);
   if (url && url.startsWith('https://')) {
     APPS_SCRIPT_URL = url;
     safeStorage.setItem('ls_script_url', url);
     showNotif('✓ URL tersimpan!');
+    versiScriptServer = null;   // 27 Okt 2026: cek ulang versi script di URL baru
     updateSyncStatus();
+    cekVersiScript(true);
   }
 }
 
 function updateSyncStatus() {
   const el = document.getElementById('syncStatus');
   if (!el) return;
-  const pending = syncQueue.length;
+  // v14: hapus yang belum terkonfirmasi ikut dihitung sebagai "tertunda",
+  // supaya kasir tahu masih ada yang belum beres di server.
+  const belumHapus = (typeof pendingDeletes !== 'undefined') ? pendingDeletes.length : 0;
+  const pending = syncQueue.length + belumHapus;
+  el.title = '';
   if (!APPS_SCRIPT_URL) {
     el.textContent = '⚙️ Sheets';
     el.style.color = 'var(--muted)';
+  } else if (scriptMasihLama()) {
+    // 27 Okt 2026: URL di perangkat ini menjalankan script versi lama
+    el.textContent = '⚠️ Script lama' + (pending > 0 ? ` · ${pending} tertunda` : '');
+    el.style.color = '#FFB49A';
+    el.title = 'URL Apps Script di perangkat ini masih ' +
+               (versiScriptServer ? 'v' + versiScriptServer : 'versi lama tanpa nomor') +
+               ' (perlu v' + VERSI_SCRIPT_MINIMAL + '+). Minta owner cek Deploy → Manage deployments, ' +
+               'lalu tap di sini untuk memasang URL yang benar.';
   } else if (pending > 0) {
     el.textContent = `🟡 ${pending} tertunda`;
     el.style.color = 'var(--gold)';
   } else {
     el.textContent = '🟢 Sheets';
     el.style.color = 'var(--sage)';
+  }
+}
+
+// ─── 27 Okt 2026: CEK VERSI SCRIPT DI URL INI ──────────────────
+// Setiap deployment Apps Script punya URL sendiri, dan URL lama TETAP
+// menjalankan kode LAMA (tanpa pengaman order dobel / order terhapus).
+// POS memeriksa versinya saat dibuka; kalau lama, tombol Sheets di header
+// berubah jadi "⚠️ Script lama".
+// (var, bukan let/const: updateSyncStatus bisa terpanggil sebelum baris ini)
+var VERSI_SCRIPT_MINIMAL = 15;
+var versiScriptServer = null;   // null = belum diketahui
+
+function scriptMasihLama() {
+  return versiScriptServer !== null && versiScriptServer < VERSI_SCRIPT_MINIMAL;
+}
+
+async function cekVersiScript(beritahuSelaluHasil) {
+  const url = APPS_SCRIPT_URL;
+  if (!url || !navigator.onLine) return;
+  try {
+    const d = await ambilJSON(url + '?action=health', { percobaan: 2 });
+    if (!d || d.status !== 'ok') return;
+    versiScriptServer = parseInt(String(d.versi || '').replace(/[^\d]/g, ''), 10) || 0;
+    updateSyncStatus();
+    if (scriptMasihLama()) {
+      showNotif('⚠️ URL Script di perangkat ini masih versi lama (' + (d.versi || 'tanpa nomor versi') +
+                '). Order bisa dobel — minta owner cek URL/deploy.', 9000);
+    } else if (beritahuSelaluHasil) {
+      showNotif('✓ Script ' + d.versi + ' tersambung');
+    }
+  } catch (e) {
+    // Gagal cek (sinyal / server sibuk) — jangan ganggu kasir, coba lagi nanti.
+    console.warn('Cek versi script gagal:', e);
   }
 }
 
@@ -1598,10 +2651,13 @@ function deleteOrder(id) {
     resetEditUI();
     renderCart();
   }
+  // 27 Okt 2026: catat sebagai dihapus + buang kiriman yang masih antre,
+  // supaya order ini tidak muncul lagi dari tab lain / antrian lama.
+  tandaiOrderDihapus(id);
   orders = orders.filter(o => String(o.id) !== String(id));
   saveOrders();
   renderLog();
-  deleteOrderFromSheets(id);
+  deleteOrderFromSheets(id, 'hapus');
   showNotif('✓ Order dihapus & Sheets diperbarui');
 }
 
@@ -1614,8 +2670,9 @@ function renderLog() {
   }
 
   container.innerHTML = [...orders].reverse().map(o => {
-    const today = new Date().toLocaleDateString('id-ID');
-    const isPreOrder = o.orderDate && o.orderDate !== today;
+    // 27 Okt 2026: dulu dibandingkan dengan format "27/10/2026", padahal
+    // orderDate berformat "27 Okt 2026" → SEMUA order tampil sebagai PO.
+    const isPreOrder = !orderUntukHariIni(o);
     return `
     <div class="log-entry">
       <div class="log-head">
@@ -1655,57 +2712,135 @@ function renderLog() {
 //    → ini yang mematikan "zombie" secara permanen di device manapun
 // GET ke Apps Script bisa dibaca responnya (beda dengan POST), jadi ini
 // konfirmasi sungguhan, bukan optimistic guess.
+// v15: batas umur order yang masih diverifikasi ulang ke server
+const VERIFIKASI_MAKS_UMUR_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Umur order dari Order ID ("TXN-<milidetik>-xxxx"). ID tanpa angka waktu
+// dianggap baru, supaya tetap ikut dicek.
+function umurOrderMs(o) {
+  const m = String(o && o.id || '').match(/(\d{12,})/);
+  return m ? Math.max(0, Date.now() - Number(m[1])) : 0;
+}
+
+// Cek keberadaan Order ID di server, dipecah per 40 ID per permintaan.
+async function cekOrderDiServer(url, ids) {
+  const exists = {}, dihapus = {};
+  for (let i = 0; i < ids.length; i += 40) {
+    const potong = ids.slice(i, i + 40);
+    const d = await ambilJSON(url + '?action=checkOrders&ids=' + encodeURIComponent(potong.join(',')),
+                              { percobaan: 2 });
+    if (d.status !== 'ok' || !d.exists) throw new Error(d.message || 'respons tidak dikenal');
+    Object.assign(exists, d.exists);
+    // 27 Okt 2026: script v15 ikut melaporkan Order ID yang sudah dihapus
+    if (d.dihapus) Object.assign(dihapus, d.dihapus);
+  }
+  return { status: 'ok', exists: exists, dihapus: dihapus };
+}
+
 let isVerifying = false;
 async function verifySyncStatus(silent) {
   const url = APPS_SCRIPT_URL;
   if (!url || isVerifying || !navigator.onLine) return;
 
   // Kumpulkan semua Order ID yang perlu dicek: order lokal + isi antrian
-  const localIds = orders.map(o => String(o.id));
-  const queueIds = syncQueue
-    .map(j => String((j.rows && j.rows[0] && j.rows[0].orderId) || j.orderId || ''))
-    .filter(Boolean);
-  const allIds = [...new Set([...localIds, ...queueIds])];
+  // + v14: ID yang sudah diminta hapus tapi belum dikonfirmasi server.
+  bersihkanPendingDeletesLama();
+  // v15: order yang sudah uploaded & umurnya > 7 hari tidak dicek lagi.
+  // Dulu SEMUA order di perangkat ini dikirim dalam satu URL — makin lama
+  // makin panjang sampai ditolak Google (balasannya halaman error).
+  const localIds = orders
+    .filter(o => o.syncStatus !== 'uploaded' || umurOrderMs(o) < VERIFIKASI_MAKS_UMUR_MS)
+    .map(o => String(o.id));
+  const queueIds = syncQueue.map(idJob).filter(Boolean);
+  const deleteIds = pendingDeletes.map(d => String(d.id));
+  const allIds = [...new Set([...localIds, ...queueIds, ...deleteIds])];
   if (allIds.length === 0) return;
 
   isVerifying = true;
   try {
-    const res = await fetch(url + '?action=checkOrders&ids=' + encodeURIComponent(allIds.join(',')));
-    const data = await res.json();
-    if (data.status !== 'ok' || !data.exists) throw new Error(data.message || 'respons tidak dikenal');
+    const data = await cekOrderDiServer(url, allIds);
+    const dihapus = data.dihapus || {};
 
     let statusUpdated = 0;
     let zombiesKilled = 0;
+    let dikirimUlang = 0;
+
+    // 0. 27 Okt 2026 — order yang menurut server SUDAH DIHAPUS (dari tab /
+    //    file POS lain, atau sebelumnya) tapi masih ada di daftar perangkat
+    //    ini: buang dari perangkat, JANGAN dikirim ulang.
+    const idDihapus = orders.filter(o => dihapus[String(o.id)]).map(o => String(o.id));
+    if (idDihapus.length) {
+      catatDihapusLokal(idDihapus);
+      orders = orders.filter(o => !dihapus[String(o.id)]);
+    }
 
     // 1. Sinkronkan badge dengan kenyataan server
     orders.forEach(o => {
-      const ada = data.exists[String(o.id)];
-      if (ada && o.syncStatus !== 'uploaded') {
-        o.syncStatus = 'uploaded';
-        statusUpdated++;
-      } else if (ada === false && o.syncStatus === 'uploaded') {
-        // Server bilang TIDAK ada padahal lokal bilang uploaded →
-        // kembalikan ke pending supaya dikirim ulang (dedup server aman)
-        o.syncStatus = 'pending';
-        queuePush({ action: 'add', rows: buildRowsPayload(o) });
-        statusUpdated++;
+      const id = String(o.id);
+      const ada = data.exists[id];
+      if (ada === true) {
+        if (o.syncStatus !== 'uploaded') { o.syncStatus = 'uploaded'; statusUpdated++; }
+      } else if (ada === false) {
+        // Server bilang TIDAK ada → pastikan order ini dikirim (dedup server aman).
+        // 27 Okt 2026: juga untuk order "pending" yang antriannya hilang — dulu
+        // order seperti itu tidak pernah dikirim ulang. Order yang dibuat < 1
+        // menit lalu dilewati (mungkin masih dalam perjalanan).
+        if (o.syncStatus === 'uploaded') { o.syncStatus = 'pending'; statusUpdated++; }
+        const baruSaja = /\d{12,}/.test(id) && umurOrderMs(o) < 60000;
+        if (!baruSaja && !adaJob('add', id)) {
+          queuePush({ action: 'add', rows: buildRowsPayload(o) });
+          dikirimUlang++;
+        }
       }
     });
-    if (statusUpdated > 0) { saveOrders(); renderLog(); }
+    if (statusUpdated > 0 || idDihapus.length > 0) { saveOrders(); renderLog(); }
 
     // 2. Bunuh zombie: buang job 'add' yang order-nya sudah ada di server
+    //    atau (27 Okt 2026) sudah dihapus.
     const before = syncQueue.length;
     syncQueue = syncQueue.filter(j => {
       if ((j.action || 'add') !== 'add') return true; // job delete dibiarkan
-      const jid = String((j.rows && j.rows[0] && j.rows[0].orderId) || '');
+      const jid = idJob(j);
+      if (jid && dihapus[jid]) return false;
       return !(jid && data.exists[jid] === true);
     });
     zombiesKilled = before - syncQueue.length;
     if (zombiesKilled > 0) saveSyncQueue();
 
-    if (!silent) {
-      showNotif(`✓ Verifikasi server: ${statusUpdated} status diperbarui, ${zombiesKilled} antrian usang dibuang`);
+    // 3. v14 — verifikasi PENGHAPUSAN.
+    // Ini bagian yang dulu hilang: kalau server bilang baris ID lama
+    // MASIH ADA padahal kita sudah minta hapus, berarti request delete
+    // gagal diam-diam. Antrikan ulang supaya baris dobel tidak menetap.
+    let hapusUlang = 0;
+    let hapusBeres = 0;
+    pendingDeletes.slice().forEach(d => {
+      const id = String(d.id);
+      const ada = data.exists[id];
+      if (ada === true) {
+        // Jangan antrikan dobel kalau job delete-nya memang masih antre
+        if (!adaJob('delete', id)) { queuePush({ action: 'delete', orderId: id, alasan: 'hapus' }); hapusUlang++; }
+      } else if (ada === false) {
+        selesaiPendingDelete(id);   // server konfirmasi sudah bersih
+        hapusBeres++;
+      }
+      // ada === undefined → server tidak menjawab untuk ID ini, biarkan
+      // tercatat dan dicek lagi di siklus verifikasi berikutnya.
+    });
+
+    if (idDihapus.length > 0) {
+      // Selalu diberitahu (juga saat verifikasi otomatis) supaya kasir tahu
+      // kenapa order itu hilang dari daftar.
+      showNotif('🧹 ' + idDihapus.length + ' order yang sudah dihapus dibuang dari perangkat ini', 5000);
+    } else if (!silent) {
+      const pesan = [];
+      pesan.push(`${statusUpdated} status diperbarui`);
+      pesan.push(`${zombiesKilled} antrian usang dibuang`);
+      if (dikirimUlang > 0) pesan.push(`${dikirimUlang} order dikirim ulang`);
+      if (hapusUlang > 0) pesan.push(`${hapusUlang} hapus gagal → diulang`);
+      if (hapusBeres > 0) pesan.push(`${hapusBeres} hapus terkonfirmasi`);
+      showNotif('✓ Verifikasi server: ' + pesan.join(', '), 3500);
     }
+    if (hapusUlang > 0 || dikirimUlang > 0) processSyncQueue();
   } catch (e) {
     if (!silent) showNotif('⚠️ Gagal verifikasi ke server: ' + e.message);
     console.warn('verifySyncStatus gagal:', e);
@@ -1724,7 +2859,7 @@ function buildRowsPayload(order) {
     produk: item.name,
     qty: item.qty,
     hargaSatuan: item.qty > 0 ? Math.round(item.total / item.qty) : 0,
-    hpp: getProduct(item.id)?.hpp || 0,
+    hpp: (item.hpp != null ? item.hpp : (getProduct(item.id)?.hpp || 0)),
     total: item.total,
     kategori: order.kategori,
     totalOrder: order.total,
@@ -1747,7 +2882,7 @@ setInterval(() => verifySyncStatus(true), 120000);
 const LOGO_B64 = 'data:image/png;base64,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';
 
 function buildTagHTML(o) {
-  const isPO = o.orderDate && o.orderDate !== new Date().toLocaleDateString('id-ID');
+  const isPO = !orderUntukHariIni(o);   // 27 Okt 2026: sama dengan POS Android
   return `
     <div class="print-tag">
       <div class="pt-header"><img src="${LOGO_B64}" alt="Little Spoon"></div>
@@ -1812,18 +2947,22 @@ function exportCSV() {
   const today = new Date().toLocaleDateString('id-ID');
   const rows = [['Tanggal', 'Nama Customer', 'Produk', 'Qty', 'Harga Satuan', 'Total', 'Kategori']];
 
+  // 27 Okt 2026: Tanggal = tanggal pesanan (dulu selalu tanggal hari ini),
+  // Harga Satuan = harga yang benar-benar dipakai (bundling / tier / harga
+  // khusus), dan produk yang sudah tidak dijual tidak lagi membuat ekspor error.
   orders.forEach(o => {
     o.items.forEach(item => {
-      const p = getProduct(item.id);
+      const hargaSatuan = item.qty > 0 ? Math.round(Number(item.total) / item.qty) : 0;
       rows.push([
-        today, o.customer, item.name, item.qty,
-        p.basePrice, item.total, o.kategori
+        o.orderDate || today, o.customer, item.name, item.qty,
+        hargaSatuan, item.total, o.kategori
       ]);
     });
   });
 
-  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const sel = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const csv = rows.map(r => r.map(sel).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `laporan-${today.replace(/\//g,'-')}.csv`;
@@ -1854,10 +2993,1080 @@ async function clearAll() {
   }
 
   orders = [];
-  saveOrders();
+  saveOrders({ timpa: true });   // 27 Okt 2026: sengaja dikosongkan, jangan digabung
   renderLog();
   showNotif('✓ Tampilan lokal dibersihkan — data di Sheets tetap ada');
 }
+
+// ═══ HALAMAN 3: R&D (v12, 27 Agu 2026) ═══════════════════════
+// Sumber harga TUNGGAL = kolom "Harga Per Unit" Master Bahan di
+// Little Spoon Inventory, diambil lewat endpoint ?action=listBahanHarga.
+// Total yang tampil di sini adalah estimasi client; server menghitung
+// ulang dari Master Bahan sebelum menulis ke sheet Pengeluaran.
+
+let rndBahanList = [];               // [{nama, satuan, harga, stok}]
+let rndItems     = [];               // [{nama, satuan, harga, qty}]
+let rndAddons    = [];               // [{nama, harga, qty}]
+let rndSubmitting = false;
+
+function toggleRnD() {
+  const page = document.getElementById('rndPage');
+  const buka = !page.classList.contains('rnd-open');
+  page.classList.toggle('rnd-open', buka);
+  document.body.classList.toggle('rnd-mode', buka);
+  document.getElementById('btnRnDNav').textContent = buka ? '← Kasir' : '🧪 R&D';
+  if (buka) {
+    window.scrollTo(0, 0);
+    if (!document.getElementById('rndTanggal').value) {
+      document.getElementById('rndTanggal').value = new Date().toLocaleDateString('en-CA');
+    }
+    if (rndBahanList.length === 0) loadRnDBahan();
+    loadRnDLimit();
+  }
+}
+
+async function loadRnDBahan() {
+  if (!INVENTORY_URL) {
+    const url = prompt('Paste URL Apps Script INVENTORY (untuk harga bahan R&D):', '');
+    if (!url || !url.startsWith('https://')) {
+      document.getElementById('rndPickList').innerHTML =
+        '<div class="rnd-empty">URL Inventory belum diisi.</div>';
+      return;
+    }
+    INVENTORY_URL = url;
+    safeStorage.setItem('ls_inv_url', url);
+  }
+  try {
+    const data = await ambilJSON(INVENTORY_URL + '?action=listBahanHarga', { percobaan: 2 });
+    if (data && data.status === 'ok' && Array.isArray(data.bahan)) {
+      rndBahanList = data.bahan;
+      safeStorage.setItem('ls_rnd_bahan', JSON.stringify(rndBahanList));
+      renderRnDPicker();
+      const nol = rndBahanList.filter(b => !b.harga).length;
+      if (nol > 0) showNotif('⚠️ ' + nol + ' bahan belum ada harganya di Master Bahan');
+    } else {
+      throw new Error('respons tidak valid');
+    }
+  } catch (e) {
+    // Fallback cache supaya tetap bisa dipakai kalau sinyal jelek
+    try {
+      const c = JSON.parse(safeStorage.getItem('ls_rnd_bahan') || 'null');
+      if (c && c.length) { rndBahanList = c; renderRnDPicker(); showNotif('⚠️ Pakai daftar bahan tersimpan'); return; }
+    } catch (e2) { /* abaikan */ }
+    document.getElementById('rndPickList').innerHTML =
+      '<div class="rnd-empty">Gagal memuat daftar bahan. Pastikan routing <code>listBahanHarga</code> sudah ditambah di Apps Script Inventory.</div>';
+  }
+}
+
+function renderRnDPicker() {
+  const box = document.getElementById('rndPickList');
+  const cari = (document.getElementById('rndCari').value || '').toLowerCase().trim();
+  const dipakai = {};
+  rndItems.forEach(i => { dipakai[i.nama.toLowerCase()] = true; });
+
+  const hasil = rndBahanList
+    .filter(b => !dipakai[String(b.nama).toLowerCase()])
+    .filter(b => !cari || String(b.nama).toLowerCase().indexOf(cari) !== -1)
+    .slice(0, 60);
+
+  if (hasil.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">' +
+      (rndBahanList.length === 0 ? 'Daftar bahan belum termuat.' : 'Tidak ada bahan cocok.') + '</div>';
+    return;
+  }
+  box.innerHTML = hasil.map(b =>
+    '<div class="rnd-pick-item" onclick="pilihRnDBahan(' + JSON.stringify(String(b.nama)).replace(/"/g, '&quot;') + ')">' +
+      '<span>' + escapeHtmlRnD(b.nama) + '</span>' +
+      '<span>' + fmt(Math.round(b.harga)) + ' / ' + escapeHtmlRnD(b.satuan || '') + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function escapeHtmlRnD(t) {
+  return String(t == null ? '' : t)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function pilihRnDBahan(nama) {
+  const b = rndBahanList.find(x => String(x.nama) === String(nama));
+  if (!b) return;
+  rndItems.push({ nama: b.nama, satuan: b.satuan || '', harga: Number(b.harga) || 0, qty: 0 });
+  document.getElementById('rndCari').value = '';
+  renderRnDPicker();
+  renderRnDItems();
+}
+
+function setRnDQty(i, val) {
+  if (!rndItems[i]) return;
+  const q = parseFloat(String(val).replace(',', '.'));
+  rndItems[i].qty = isNaN(q) || q < 0 ? 0 : q;
+  hitungRnDTotal();
+  const el = document.getElementById('rndSub' + i);
+  if (el) el.textContent = fmt(Math.round(rndItems[i].qty * rndItems[i].harga));
+}
+
+function hapusRnDItem(i) {
+  rndItems.splice(i, 1);
+  renderRnDItems();
+  renderRnDPicker();
+}
+
+function renderRnDItems() {
+  const box = document.getElementById('rndItems');
+  if (rndItems.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">Belum ada bahan dipilih</div>';
+    hitungRnDTotal();
+    return;
+  }
+  box.innerHTML = rndItems.map((it, i) =>
+    '<div class="rnd-row">' +
+      '<div class="rnd-name">' + escapeHtmlRnD(it.nama) +
+        '<small>' + fmt(Math.round(it.harga)) + ' / ' + escapeHtmlRnD(it.satuan) + '</small></div>' +
+      '<input type="number" inputmode="decimal" min="0" step="any" value="' + (it.qty || '') +
+        '" placeholder="qty" oninput="setRnDQty(' + i + ', this.value)" />' +
+      '<div class="rnd-sub" id="rndSub' + i + '">' + fmt(Math.round(it.qty * it.harga)) + '</div>' +
+      '<button class="rnd-del" onclick="hapusRnDItem(' + i + ')" title="Hapus">✕</button>' +
+    '</div>'
+  ).join('');
+  hitungRnDTotal();
+}
+
+function addRnDAddon() {
+  rndAddons.push({ nama: '', harga: 0, qty: 1 });
+  renderRnDAddons();
+}
+
+function setRnDAddon(i, field, val) {
+  if (!rndAddons[i]) return;
+  if (field === 'nama') {
+    rndAddons[i].nama = val;
+  } else {
+    const n = parseFloat(String(val).replace(',', '.'));
+    rndAddons[i][field] = isNaN(n) || n < 0 ? 0 : n;
+  }
+  hitungRnDTotal();
+  const el = document.getElementById('rndAddonSub' + i);
+  if (el) el.textContent = fmt(Math.round(rndAddons[i].harga * (rndAddons[i].qty || 1)));
+}
+
+function hapusRnDAddon(i) {
+  rndAddons.splice(i, 1);
+  renderRnDAddons();
+}
+
+function renderRnDAddons() {
+  const box = document.getElementById('rndAddons');
+  if (rndAddons.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">Belum ada add-on</div>';
+    hitungRnDTotal();
+    return;
+  }
+  box.innerHTML = rndAddons.map((ad, i) =>
+    '<div class="rnd-row">' +
+      '<input type="text" value="' + escapeHtmlRnD(ad.nama) + '" placeholder="Nama item" ' +
+        'oninput="setRnDAddon(' + i + ', \'nama\', this.value)" />' +
+      '<input type="number" inputmode="decimal" min="0" step="any" value="' + (ad.harga || '') +
+        '" placeholder="harga" oninput="setRnDAddon(' + i + ', \'harga\', this.value)" />' +
+      '<div class="rnd-sub" id="rndAddonSub' + i + '">' + fmt(Math.round(ad.harga * (ad.qty || 1))) + '</div>' +
+      '<button class="rnd-del" onclick="hapusRnDAddon(' + i + ')" title="Hapus">✕</button>' +
+    '</div>'
+  ).join('');
+  hitungRnDTotal();
+}
+
+// ── Limit / budget R&D ────────────────────────────────────────
+// Limit = Rp 500.000 + (omzet bulan sebelumnya × 4%).
+// Sisa terus berkurang tiap sesi R&D tersimpan. Boleh MINUS: R&D tetap
+// bisa jalan, hanya ditandai "!" supaya jelas limitnya sudah lewat.
+let rndLimit = null;   // { limit, terpakai, sisa, bulan, ... }
+
+async function loadRnDLimit() {
+  if (!INVENTORY_URL) return;
+  const bulanParam = bulanKeyDariISO(document.getElementById('rndTanggal').value);
+  try {
+    const data = await ambilJSON(INVENTORY_URL + '?action=rndBudget' +
+      (bulanParam ? '&bulan=' + encodeURIComponent(bulanParam) : ''), { percobaan: 2 });
+    // Cek bukan cuma status 'ok', tapi field limit benar-benar ada angkanya.
+    // Kalau routing 'rndBudget' belum disisipkan di Apps Script, doGet jatuh
+    // ke respons default {status:'ok', message:'...'} TANPA field limit —
+    // tanpa pengecekan ini, itu akan lolos dan bikin sisa jadi NaN.
+    if (data && data.status === 'ok' && typeof data.limit === 'number') {
+      rndLimit = data;
+      safeStorage.setItem('ls_rnd_limit', JSON.stringify(data));
+    } else {
+      rndLimit = null;
+      console.warn('Respons rndBudget tidak lengkap — routing rndBudget kemungkinan belum ditambah di Apps Script Inventory:', data);
+    }
+  } catch (e) {
+    try { rndLimit = JSON.parse(safeStorage.getItem('ls_rnd_limit') || 'null'); } catch (e2) { /* abaikan */ }
+    console.warn('Gagal memuat limit R&D:', e);
+  }
+  renderRnDLimit();
+}
+
+function bulanKeyDariISO(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '';
+  const nama = ['Januari','Februari','Maret','April','Mei','Juni',
+                'Juli','Agustus','September','Oktober','November','Desember'];
+  return nama[parseInt(m[2], 10) - 1] + ' ' + m[1];
+}
+
+function renderRnDLimit() {
+  const card    = document.getElementById('rndLimitCard');
+  const elSisa  = document.getElementById('rndLimitSisa');
+  const elBulan = document.getElementById('rndLimitBulan');
+  const elDetail= document.getElementById('rndLimitDetail');
+  const elBar   = document.getElementById('rndLimitBar');
+  if (!card) return;
+
+  if (!rndLimit) {
+    elSisa.textContent = '—';
+    elDetail.textContent = 'Limit belum termuat. Pastikan routing rndBudget sudah ditambah di Apps Script Inventory.';
+    elBar.style.width = '0%';
+    return;
+  }
+
+  // Sisa hidup: ikut berkurang oleh isian form yang sedang dikerjakan,
+  // jadi kelihatan dampaknya SEBELUM disimpan.
+  const draft = hitungRnDTotalNilai();
+  const sisa  = rndLimit.sisa - draft;
+  const habis = sisa <= 0;
+
+  elBulan.textContent = rndLimit.bulan ? '· ' + rndLimit.bulan : '';
+  elSisa.innerHTML = (habis ? '<span class="rl-bang">!</span>' : '') +
+                     (sisa < 0 ? '−' + fmt(Math.abs(Math.round(sisa))) : fmt(Math.round(sisa)));
+
+  card.classList.toggle('habis', habis);
+  card.classList.toggle('warn', !habis && rndLimit.limit > 0 && sisa < rndLimit.limit * 0.25);
+
+  const terpakaiTotal = rndLimit.terpakai + draft;
+  const persen = rndLimit.limit > 0
+    ? Math.max(0, Math.min(100, (terpakaiTotal / rndLimit.limit) * 100)) : 100;
+  elBar.style.width = persen.toFixed(1) + '%';
+
+  const baris = [];
+  baris.push('Limit ' + fmt(rndLimit.limit) + ' = ' + fmt(rndLimit.komponenDasar) +
+             ' + 4% × omzet ' + (rndLimit.bulanSebelumnya || 'bulan lalu') +
+             ' (' + fmt(rndLimit.omzetBulanSebelumnya) + ')');
+  baris.push('Sudah terpakai ' + fmt(rndLimit.terpakai) +
+             ' dari ' + rndLimit.jumlahSesi + ' sesi' +
+             (draft > 0 ? ' · draft sekarang ' + fmt(Math.round(draft)) : ''));
+  if (habis) {
+    baris.push('<strong style="color:var(--terracotta);">! Limit bulan ini habis — R&amp;D tetap bisa jalan, tapi nilainya sudah minus.</strong>');
+  }
+  elDetail.innerHTML = baris.join('<br>');
+}
+
+function hitungRnDTotalNilai() {
+  const tb = rndItems.reduce((s, i) => s + (i.qty || 0) * (i.harga || 0), 0);
+  const ta = rndAddons.reduce((s, a) => s + (a.harga || 0) * (a.qty || 1), 0);
+  return tb + ta;
+}
+
+function hitungRnDTotal() {
+  const tb = rndItems.reduce((s, i) => s + (i.qty || 0) * (i.harga || 0), 0);
+  const ta = rndAddons.reduce((s, a) => s + (a.harga || 0) * (a.qty || 1), 0);
+  document.getElementById('rndTotalBahan').textContent = fmt(Math.round(tb));
+  document.getElementById('rndTotalAddon').textContent = fmt(Math.round(ta));
+  document.getElementById('rndGrandTotal').textContent = fmt(Math.round(tb + ta));
+  renderRnDLimit();   // sisa limit ikut berkurang live
+  return { tb: tb, ta: ta, total: tb + ta };
+}
+
+function resetRnD() {
+  rndItems = [];
+  rndAddons = [];
+  document.getElementById('rndJudul').value = '';
+  document.getElementById('rndCatatan').value = '';
+  document.getElementById('rndCari').value = '';
+  document.getElementById('rndKurangiStok').checked = false;
+  renderRnDItems();
+  renderRnDAddons();
+  renderRnDPicker();
+}
+
+async function submitRnD() {
+  if (rndSubmitting) return;
+
+  const judul = (document.getElementById('rndJudul').value || '').trim();
+  if (!judul) { showNotif('⚠️ Isi dulu judul percobaannya'); return; }
+
+  const itemsValid  = rndItems.filter(i => i.qty > 0);
+  const addonsValid = rndAddons.filter(a => a.nama.trim() && a.harga > 0);
+  if (itemsValid.length === 0 && addonsValid.length === 0) {
+    showNotif('⚠️ Belum ada bahan ber-qty atau add-on berharga');
+    return;
+  }
+
+  const t = hitungRnDTotal();
+  if (!confirm('Simpan R&D "' + judul + '" senilai ' + fmt(Math.round(t.total)) +
+               ' ke sheet Pengeluaran?')) return;
+
+  if (!INVENTORY_URL) { showNotif('⚠️ URL Inventory belum diisi'); return; }
+
+  const payload = {
+    action: 'addRnD',
+    judul: judul,
+    tanggal: document.getElementById('rndTanggal').value || new Date().toLocaleDateString('en-CA'),
+    catatan: (document.getElementById('rndCatatan').value || '').trim(),
+    kurangiStok: document.getElementById('rndKurangiStok').checked,
+    items:  itemsValid.map(i => ({ bahan: i.nama, qty: i.qty })),
+    addons: addonsValid.map(a => ({ nama: a.nama.trim(), harga: a.harga, qty: a.qty || 1 }))
+  };
+
+  rndSubmitting = true;
+  const btn = document.getElementById('rndSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Menyimpan…';
+
+  try {
+    // no-cors, pola sama dengan sync order: respons tidak bisa dibaca,
+    // tapi server yang jadi sumber angka final (hitung ulang dari Master Bahan).
+    await fetch(INVENTORY_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    showNotif('✓ R&D tersimpan — cek sheet Pengeluaran & Log R&D');
+    resetRnD();
+    // Beri jeda: Apps Script perlu waktu menulis baris Pengeluaran dulu
+    setTimeout(loadRnDLimit, 2500);
+  } catch (e) {
+    showNotif('⚠️ Gagal menyimpan R&D — cek koneksi lalu coba lagi');
+    console.warn('submitRnD gagal:', e);
+  } finally {
+    rndSubmitting = false;
+    btn.disabled = false;
+    btn.textContent = 'Simpan ke Pengeluaran';
+  }
+}
+// ═══ HALAMAN 4: SPECIAL MENU (v13, 28 Agu 2026) ══════════════
+// Item racikan bebas: bahan dari Master Bahan + add-on bebas + harga
+// jual sendiri. Setelah disimpan, item masuk cart seperti produk biasa,
+// jadi omzet & HPP-nya ikut tercatat di Laporan POS.
+//
+// Stok: resep item ini ditulis ke sheet Resep BOM lewat action
+// 'updateResep' yang SUDAH ADA di script Inventory. Dengan begitu
+// pengurangan/pengembalian stok mengikuti jalur normal deduct/restore —
+// tidak perlu mekanisme terpisah yang rawan tidak sinkron saat order
+// diedit atau dihapus. Add-on sengaja TIDAK ikut (tidak ada di Master
+// Bahan), biayanya hanya masuk HPP.
+
+let spcItems = [];        // [{nama, satuan, harga, qty}]
+let spcAddons = [];       // [{nama, harga, qty}]
+let spcSubmitting = false;
+// Produk special yang sudah pernah dibuat — disimpan supaya nama & HPP
+// order lama tetap terbaca setelah halaman di-refresh.
+let customProducts = (() => {
+  try { return JSON.parse(safeStorage.getItem('ls_custom_products') || '[]'); }
+  catch (e) { return []; }
+})();
+
+function simpanCustomProducts() {
+  try { safeStorage.setItem('ls_custom_products', JSON.stringify(customProducts)); }
+  catch (e) { /* storage penuh — abaikan, sesi ini tetap jalan */ }
+}
+
+function toggleSpc() {
+  const page = document.getElementById('spcPage');
+  const buka = !page.classList.contains('rnd-open');
+  page.classList.toggle('rnd-open', buka);
+  document.body.classList.toggle('spc-mode', buka);
+  if (buka) {
+    window.scrollTo(0, 0);
+    if (rndBahanList.length === 0) loadRnDBahan().then(renderSpcPicker);
+    else renderSpcPicker();
+    renderSpcItems();
+    renderSpcAddons();
+  }
+}
+
+function renderSpcPicker() {
+  const box = document.getElementById('spcPickList');
+  if (!box) return;
+  const cari = (document.getElementById('spcCari').value || '').toLowerCase().trim();
+  const dipakai = {};
+  spcItems.forEach(i => { dipakai[i.nama.toLowerCase()] = true; });
+
+  const hasil = rndBahanList
+    .filter(b => !dipakai[String(b.nama).toLowerCase()])
+    .filter(b => !cari || String(b.nama).toLowerCase().indexOf(cari) !== -1)
+    .slice(0, 60);
+
+  if (hasil.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">' +
+      (rndBahanList.length === 0 ? 'Daftar bahan belum termuat.' : 'Tidak ada bahan cocok.') + '</div>';
+    return;
+  }
+  box.innerHTML = hasil.map(b =>
+    '<div class="rnd-pick-item" onclick="pilihSpcBahan(' +
+      JSON.stringify(String(b.nama)).replace(/"/g, '&quot;') + ')">' +
+      '<span>' + escapeHtmlRnD(b.nama) + '</span>' +
+      '<span>' + fmt(Math.round(b.harga)) + ' / ' + escapeHtmlRnD(b.satuan || '') + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function pilihSpcBahan(nama) {
+  const b = rndBahanList.find(x => String(x.nama) === String(nama));
+  if (!b) return;
+  spcItems.push({ nama: b.nama, satuan: b.satuan || '', harga: Number(b.harga) || 0, qty: 0 });
+  document.getElementById('spcCari').value = '';
+  renderSpcPicker();
+  renderSpcItems();
+}
+
+function setSpcQty(i, val) {
+  if (!spcItems[i]) return;
+  const q = parseFloat(String(val).replace(',', '.'));
+  spcItems[i].qty = isNaN(q) || q < 0 ? 0 : q;
+  hitungSpcTotal();
+  const el = document.getElementById('spcSub' + i);
+  if (el) el.textContent = fmt(Math.round(spcItems[i].qty * spcItems[i].harga));
+}
+
+function hapusSpcItem(i) { spcItems.splice(i, 1); renderSpcItems(); renderSpcPicker(); }
+
+function renderSpcItems() {
+  const box = document.getElementById('spcItems');
+  if (!box) return;
+  if (spcItems.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">Belum ada bahan dipilih</div>';
+    hitungSpcTotal();
+    return;
+  }
+  box.innerHTML = spcItems.map((it, i) =>
+    '<div class="rnd-row">' +
+      '<div class="rnd-name">' + escapeHtmlRnD(it.nama) +
+        '<small>' + fmt(Math.round(it.harga)) + ' / ' + escapeHtmlRnD(it.satuan) + '</small></div>' +
+      '<input type="number" inputmode="decimal" min="0" step="any" value="' + (it.qty || '') +
+        '" placeholder="qty" oninput="setSpcQty(' + i + ', this.value)" />' +
+      '<div class="rnd-sub" id="spcSub' + i + '">' + fmt(Math.round(it.qty * it.harga)) + '</div>' +
+      '<button class="rnd-del" onclick="hapusSpcItem(' + i + ')" title="Hapus">✕</button>' +
+    '</div>'
+  ).join('');
+  hitungSpcTotal();
+}
+
+function addSpcAddon() { spcAddons.push({ nama: '', harga: 0, qty: 1 }); renderSpcAddons(); }
+
+function setSpcAddon(i, field, val) {
+  if (!spcAddons[i]) return;
+  if (field === 'nama') spcAddons[i].nama = val;
+  else {
+    const n = parseFloat(String(val).replace(',', '.'));
+    spcAddons[i][field] = isNaN(n) || n < 0 ? 0 : n;
+  }
+  hitungSpcTotal();
+  const el = document.getElementById('spcAddonSub' + i);
+  if (el) el.textContent = fmt(Math.round(spcAddons[i].harga * (spcAddons[i].qty || 1)));
+}
+
+function hapusSpcAddon(i) { spcAddons.splice(i, 1); renderSpcAddons(); }
+
+function renderSpcAddons() {
+  const box = document.getElementById('spcAddons');
+  if (!box) return;
+  if (spcAddons.length === 0) {
+    box.innerHTML = '<div class="rnd-empty">Belum ada add-on</div>';
+    hitungSpcTotal();
+    return;
+  }
+  box.innerHTML = spcAddons.map((ad, i) =>
+    '<div class="rnd-row">' +
+      '<input type="text" value="' + escapeHtmlRnD(ad.nama) + '" placeholder="Nama item" ' +
+        'oninput="setSpcAddon(' + i + ', \'nama\', this.value)" />' +
+      '<input type="number" inputmode="decimal" min="0" step="any" value="' + (ad.harga || '') +
+        '" placeholder="harga" oninput="setSpcAddon(' + i + ', \'harga\', this.value)" />' +
+      '<div class="rnd-sub" id="spcAddonSub' + i + '">' + fmt(Math.round(ad.harga * (ad.qty || 1))) + '</div>' +
+      '<button class="rnd-del" onclick="hapusSpcAddon(' + i + ')" title="Hapus">✕</button>' +
+    '</div>'
+  ).join('');
+  hitungSpcTotal();
+}
+
+function hitungSpcTotal() {
+  const tb = spcItems.reduce((s, i) => s + (i.qty || 0) * (i.harga || 0), 0);
+  const ta = spcAddons.reduce((s, a) => s + (a.harga || 0) * (a.qty || 1), 0);
+  const hpp = tb + ta;
+  const jual = Number(document.getElementById('spcHarga').value) || 0;
+  const margin = jual - hpp;
+
+  document.getElementById('spcTotalBahan').textContent = fmt(Math.round(tb));
+  document.getElementById('spcTotalAddon').textContent = fmt(Math.round(ta));
+  document.getElementById('spcTotalHpp').textContent = fmt(Math.round(hpp));
+  document.getElementById('spcHargaJual').textContent = fmt(Math.round(jual));
+
+  const elM = document.getElementById('spcMargin');
+  elM.textContent = (margin < 0 ? '−' : '') + fmt(Math.abs(Math.round(margin)));
+  elM.style.color = margin < 0 ? 'var(--terracotta)' : 'var(--sage)';
+
+  const note = document.getElementById('spcMarginNote');
+  if (jual <= 0) note.textContent = 'Isi harga jual untuk melihat margin.';
+  else if (margin < 0) note.innerHTML = '<strong style="color:var(--terracotta);">⚠️ Harga jual di bawah HPP — order ini rugi.</strong>';
+  else note.textContent = 'Margin ' + (jual > 0 ? Math.round((margin / jual) * 100) : 0) +
+       '% dari harga jual. HPP ini hanya biaya bahan, belum termasuk tenaga kerja & overhead.';
+
+  return { tb: tb, ta: ta, hpp: hpp, jual: jual, margin: margin };
+}
+
+function resetSpc() {
+  spcItems = [];
+  spcAddons = [];
+  document.getElementById('spcNama').value = '';
+  document.getElementById('spcHarga').value = '';
+  document.getElementById('spcCari').value = '';
+  renderSpcItems();
+  renderSpcAddons();
+  renderSpcPicker();
+}
+
+async function submitSpc() {
+  if (spcSubmitting) return;
+
+  const nama = (document.getElementById('spcNama').value || '').trim();
+  if (!nama) { showNotif('⚠️ Isi dulu nama item special'); return; }
+
+  // Nama harus unik terhadap produk tetap — kalau bentrok, resep produk
+  // asli bisa tertimpa saat updateResep dikirim ke sheet.
+  const bentrok = [...PRODUCTS.dc, ...PRODUCTS.sb, ...PRODUCTS.b2bsalt, ...PRODUCTS.b2b, ...PRODUK_PENSIUN]
+    .some(p => p.name.toLowerCase() === nama.toLowerCase());
+  if (bentrok) { showNotif('⚠️ Nama itu sudah dipakai produk tetap — pakai nama lain'); return; }
+
+  const itemsValid = spcItems.filter(i => i.qty > 0);
+  const addonsValid = spcAddons.filter(a => a.nama.trim() && a.harga > 0);
+  if (itemsValid.length === 0 && addonsValid.length === 0) {
+    showNotif('⚠️ Belum ada bahan ber-qty atau add-on berharga'); return;
+  }
+
+  const t = hitungSpcTotal();
+  if (t.jual <= 0 && !confirm('Harga jual masih Rp 0. Lanjut? Item ini tidak akan menambah omzet.')) return;
+  if (t.margin < 0 && !confirm('Harga jual di bawah HPP (rugi ' + fmt(Math.abs(Math.round(t.margin))) +
+      '). Tetap lanjut?')) return;
+
+  spcSubmitting = true;
+  const btn = document.getElementById('spcSubmit');
+  btn.disabled = true; btn.textContent = 'Menyimpan…';
+
+  try {
+    // Tulis resep ke sheet Resep BOM supaya stok terpotong lewat jalur normal
+    if (itemsValid.length > 0 && INVENTORY_URL) {
+      await fetch(INVENTORY_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'updateResep',
+          namaProduk: nama,
+          items: itemsValid.map(i => ({ bahan: i.nama, qtyPerPcs: i.qty, satuan: i.satuan }))
+        })
+      });
+    } else if (itemsValid.length > 0) {
+      showNotif('⚠️ URL Inventory kosong — stok bahan TIDAK akan terpotong');
+    }
+
+    const prod = {
+      id: 'SPC' + Date.now(),
+      name: nama,
+      basePrice: Math.round(t.jual),
+      hpp: Math.round(t.hpp),
+      isSpecial: true,
+      note: 'Special · HPP ' + fmt(Math.round(t.hpp))
+    };
+    customProducts.push(prod);
+    simpanCustomProducts();
+    renderSpecialGrid();   // kartu item baru langsung muncul di panel produk
+
+    addToCart(prod.id);
+    resetSpc();
+    toggleSpc();          // kembali ke kasir
+    switchMobileTab('order');
+    showNotif('✓ "' + nama + '" masuk ke order');
+  } catch (e) {
+    showNotif('⚠️ Gagal menyimpan item special');
+    console.warn('submitSpc gagal:', e);
+  } finally {
+    spcSubmitting = false;
+    btn.disabled = false;
+    btn.textContent = 'Simpan & masukkan ke order';
+  }
+}
+
+// Hapus item special dari daftar tersimpan (tidak menyentuh order lama)
+function hapusCustomProduct(id) {
+  const p = customProducts.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm('Hapus "' + p.name + '" dari daftar Special Menu? Order lama tetap utuh.')) return;
+  customProducts = customProducts.filter(x => x.id !== id);
+  simpanCustomProducts();
+  delete cart[id];
+  delete cartHargaOverride[id];
+  renderProducts();
+  renderCart();
+}
+
+// ═══ HALAMAN 5: REKAP PESANAN HARIAN (v15, 3 Sep 2026) ═══════
+//
+// KENAPA TIDAK MEMBACA SHEET "POS <Bulan>":
+// Sheet cermin bulanan cuma di-refresh oleh trigger terjadwal
+// (beberapa kali sehari). Di antara dua jadwal isinya bisa tertinggal
+// dari Laporan POS. Jadi endpoint ?action=rekapPesanan di Apps Script
+// SELALU membaca 'Laporan POS' langsung — sheet cermin hanya diintip
+// jumlah barisnya untuk dilaporkan selisihnya di kartu status.
+//
+// Tiga lapis penjaga kesegaran data:
+//   1. Server: cache-nya version-busted — begitu ada order masuk atau
+//      dihapus, rebuildAllRecaps() memanggil bumpCacheVersion() dan
+//      cache lama otomatis basi (tidak menunggu TTL habis).
+//   2. Client: hasil terakhir dianggap segar maksimal 60 detik. Lewat
+//      dari itu, membuka halaman ini otomatis menarik data baru.
+//   3. Tombol "Perbarui": kirim nocache=1 → server melewati cache
+//      sepenuhnya dan menghitung ulang dari sheet saat itu juga.
+//
+// Data terakhir juga disimpan di localStorage supaya halaman ini tetap
+// bisa dibuka saat offline (dengan label umur datanya, bukan disamarkan
+// seolah-olah baru).
+
+const REKAP_CACHE_PREFIX = 'ls_rekap_';
+const REKAP_UMUR_SEGAR_MS = 60 * 1000;   // di bawah ini dianggap masih segar
+
+let rekapBulanAktif = '';
+let rekapData       = null;
+let rekapLoading    = false;
+let rekapExpanded   = {};    // { '03 Sep 2026': true } — kartu hari yang terbuka
+let rekapKatIndex   = null;  // nama produk (lowercase) → label grup
+
+// Urutan grup mengikuti urutan tab produk di halaman kasir
+const REKAP_URUTAN_GRUP = [
+  '🍱 Menu Isi', '🥐 Salt Bread', '🤝 B2B Salt Bread',
+  '🤝 B2B Lainnya', '📦 Packaging', '✨ Lainnya / Special'
+];
+
+function tutupRekap() {
+  const page = document.getElementById('rekapPage');
+  if (!page) return;
+  page.classList.remove('rnd-open');
+  document.body.classList.remove('rekap-mode');
+  const btn = document.getElementById('btnRekapNav');
+  if (btn) btn.textContent = '📊 Rekap';
+}
+
+function toggleRekap() {
+  const page = document.getElementById('rekapPage');
+  if (!page) return;
+  const buka = !page.classList.contains('rnd-open');
+  page.classList.toggle('rnd-open', buka);
+  document.body.classList.toggle('rekap-mode', buka);
+  document.getElementById('btnRekapNav').textContent = buka ? '← Kasir' : '📊 Rekap';
+  if (buka) {
+    window.scrollTo(0, 0);
+    muatRekap(false);
+  }
+}
+
+// ── Cache lokal per bulan ────────────────────────────────────
+function rekapCacheKey(bulan) { return REKAP_CACHE_PREFIX + (bulan || 'default'); }
+
+function simpanRekapCache(bulan, data) {
+  try {
+    safeStorage.setItem(rekapCacheKey(bulan),
+      JSON.stringify({ disimpanPada: Date.now(), data: data }));
+  } catch (e) { /* storage penuh — abaikan, sesi ini tetap jalan */ }
+}
+
+function bacaRekapCache(bulan) {
+  try {
+    const raw = safeStorage.getItem(rekapCacheKey(bulan));
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !obj.data) return null;
+    return obj;
+  } catch (e) { return null; }
+}
+
+function rekapWaktuRelatif(ts) {
+  const detik = Math.max(0, Math.round((Date.now() - ts) / 1000));
+  if (detik < 60) return detik + ' detik lalu';
+  const menit = Math.round(detik / 60);
+  if (menit < 60) return menit + ' menit lalu';
+  const jam = Math.round(menit / 60);
+  if (jam < 24) return jam + ' jam lalu';
+  return Math.round(jam / 24) + ' hari lalu';
+}
+
+function setRekapStatus(html) {
+  const el = document.getElementById('rekapStatus');
+  if (el) el.innerHTML = html;
+}
+
+// ── Ambil data dari Apps Script ──────────────────────────────
+async function muatRekap(paksa) {
+  if (rekapLoading) return;
+
+  const url  = APPS_SCRIPT_URL;
+  const body = document.getElementById('rekapBody');
+  const btn  = document.getElementById('rekapRefreshBtn');
+  if (!body) return;
+
+  if (!url) {
+    body.innerHTML = '<div class="rnd-empty">URL Apps Script belum diisi.<br>' +
+                     'Tekan tombol ⚙️ Sheets di header dulu.</div>';
+    setRekapStatus('');
+    return;
+  }
+
+  // 1) Tampilkan dulu data tersimpan (kalau ada) supaya layar tidak kosong
+  const cache = bacaRekapCache(rekapBulanAktif);
+  if (cache && !rekapData) {
+    rekapData = cache.data;
+    renderRekap(cache.disimpanPada);
+  }
+
+  // 2) Masih segar & bukan permintaan paksa → cukup pakai yang tampil
+  if (!paksa && cache && (Date.now() - cache.disimpanPada) < REKAP_UMUR_SEGAR_MS) {
+    return;
+  }
+
+  if (!navigator.onLine) {
+    setRekapStatus('⚠️ Offline — menampilkan data tersimpan' +
+      (cache ? ' (' + rekapWaktuRelatif(cache.disimpanPada) + ')' : '') + '.');
+    return;
+  }
+
+  rekapLoading = true;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Memuat…'; }
+  setRekapStatus('⏳ Mengambil data terbaru langsung dari Laporan POS…');
+
+  try {
+    const q = url + '?action=rekapPesanan' +
+      (rekapBulanAktif ? '&bulan=' + encodeURIComponent(rekapBulanAktif) : '') +
+      (paksa ? '&nocache=1' : '') +
+      '&_t=' + Date.now();   // cegah browser menyajikan respons lamanya sendiri
+
+    const data = await ambilJSON(q);
+    if (!data || data.status !== 'ok') {
+      throw new Error((data && data.message) || 'respons tidak dikenal');
+    }
+
+    rekapData = data;
+    rekapBulanAktif = data.bulan || rekapBulanAktif;
+    simpanRekapCache(rekapBulanAktif, data);
+    renderRekap(Date.now());
+  } catch (e) {
+    console.warn('Gagal memuat rekap:', e);
+    setRekapStatus('⚠️ Gagal memuat: ' + escapeHtmlRnD(e.message) +
+      (rekapData ? ' — angka di bawah ini dari data tersimpan.' : ''));
+    if (!rekapData) {
+      body.innerHTML = '<div class="rnd-empty">Belum ada data yang bisa ditampilkan.<br>' +
+                       'Cek koneksi lalu tekan 🔄 Perbarui.</div>';
+    }
+  } finally {
+    rekapLoading = false;
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 Perbarui'; }
+  }
+}
+
+function gantiBulanRekap() {
+  const sel = document.getElementById('rekapBulan');
+  if (!sel) return;
+  rekapBulanAktif = sel.value;
+  rekapData = null;
+  rekapExpanded = {};
+  muatRekap(false);
+}
+
+function toggleRekapHari(tanggal) {
+  rekapExpanded[tanggal] = !rekapExpanded[tanggal];
+  renderRekapHari();
+}
+
+// ── Kelompokkan produk mengikuti tab di halaman kasir ────────
+// Produk yang tidak dikenal (item Special Menu, produk lama yang sudah
+// dihapus dari daftar) tetap tampil di grup "Lainnya / Special" —
+// jadi tidak ada baris yang hilang diam-diam dari rekap.
+function rekapGrupProduk(nama) {
+  if (!rekapKatIndex) {
+    rekapKatIndex = {};
+    const label = {
+      dc: '🍱 Menu Isi', sb: '🥐 Salt Bread',
+      b2bsalt: '🤝 B2B Salt Bread', b2b: '🤝 B2B Lainnya'
+    };
+    Object.keys(label).forEach(function (cat) {
+      (PRODUCTS[cat] || []).forEach(function (p) {
+        rekapKatIndex[String(p.name).trim().toLowerCase()] =
+          p.isPackaging ? '📦 Packaging' : label[cat];
+      });
+    });
+    // 27 Okt 2026: penjualan lama produk yang sudah tidak dijual tetap
+    // masuk grupnya sendiri, bukan "Lainnya / Special".
+    PRODUK_PENSIUN.forEach(function (p) {
+      rekapKatIndex[String(p.name).trim().toLowerCase()] = label[p.grup] || '✨ Lainnya / Special';
+    });
+  }
+  return rekapKatIndex[String(nama).trim().toLowerCase()] || '✨ Lainnya / Special';
+}
+
+// ── Render penuh: dropdown bulan + status + total + daftar hari ──
+function renderRekap(disimpanPada) {
+  const d = rekapData;
+  if (!d) return;
+
+  // Dropdown bulan
+  const sel = document.getElementById('rekapBulan');
+  if (sel) {
+    const daftar = (d.bulanTersedia && d.bulanTersedia.length)
+      ? d.bulanTersedia
+      : (d.bulan ? [d.bulan] : []);
+    sel.innerHTML = daftar.map(function (b) {
+      return '<option value="' + escapeHtmlRnD(b) + '"' +
+             (b === d.bulan ? ' selected' : '') + '>' + escapeHtmlRnD(b) + '</option>';
+    }).join('');
+  }
+
+  // Baris status (umur data di layar)
+  const umur = disimpanPada ? rekapWaktuRelatif(disimpanPada) : 'baru saja';
+  setRekapStatus('✓ Data dimuat ' + umur + ' · sumber: <strong>' +
+    escapeHtmlRnD(d.sumber || 'Laporan POS') + '</strong>');
+
+  // Blok meta: bukti kesegaran + status sheet cermin bulanan
+  const meta = document.getElementById('rekapMeta');
+  if (meta) {
+    const baris = [];
+    if (d.dihitungPada) {
+      baris.push('Dihitung server pada <strong>' + escapeHtmlRnD(d.dihitungPada) + '</strong> WIB');
+    }
+    if (d.dibangunPada) {
+      baris.push('Rekap otomatis terakhir diperbarui <strong>' + escapeHtmlRnD(d.dibangunPada) +
+                 '</strong> WIB (diperbarui setiap ada order masuk)');
+    }
+    if (d.barisTerakhir && d.barisTerakhir.waktu) {
+      baris.push('Baris terakhir di Laporan POS: ' +
+        escapeHtmlRnD(d.barisTerakhir.customer || '(tanpa nama)') + ' · ' +
+        escapeHtmlRnD(d.barisTerakhir.waktu));
+    }
+
+    // Baris yang formatnya tidak terbaca TIDAK masuk hitungan mana pun
+    // (di sini maupun di Dashboard Owner). Ditampilkan supaya ketahuan,
+    // bukan hilang diam-diam.
+    if (d.barisTanggalBermasalah > 0) {
+      baris.push('<span class="rk-warn">' + d.barisTanggalBermasalah +
+        ' baris di Laporan POS formatnya tidak terbaca</span> dan tidak ikut ' +
+        'dihitung di mana pun. Perbaiki kolom Tanggal jadi teks “DD Mon YYYY” ' +
+        '(contoh: 03 Sep 2026).');
+    }
+
+    const m = d.mirror;
+    if (m) {
+      if (!m.ada) {
+        baris.push('Sheet cermin “' + escapeHtmlRnD(m.nama) + '” belum dibuat — ' +
+          'tidak berpengaruh, rekap ini dibaca langsung dari Laporan POS.');
+      } else if (m.status === 'sinkron') {
+        baris.push('<span class="rk-fresh">Sheet cermin “' + escapeHtmlRnD(m.nama) +
+          '” sudah sinkron</span> (' + m.baris + ' baris).');
+      } else if (m.selisih > 0) {
+        baris.push('<span class="rk-warn">Sheet cermin “' + escapeHtmlRnD(m.nama) +
+          '” tertinggal ' + m.selisih + ' baris</span> — angka di halaman ini ' +
+          'tetap akurat karena dibaca langsung dari Laporan POS, bukan dari cermin.');
+      } else if (m.selisih < 0) {
+        baris.push('<span class="rk-warn">Sheet cermin “' + escapeHtmlRnD(m.nama) +
+          '” punya ' + Math.abs(m.selisih) + ' baris lebih banyak</span> — ' +
+          'kemungkinan ada order yang sudah dihapus tapi cermin belum di-refresh.');
+      } else {
+        baris.push('Sheet cermin “' + escapeHtmlRnD(m.nama) + '”: ' + escapeHtmlRnD(m.status) + '.');
+      }
+    }
+    meta.innerHTML = baris.join('<br>');
+  }
+
+  // Kartu total bulan
+  const totalBox = document.getElementById('rekapTotal');
+  const t = d.total || {};
+  if (totalBox) {
+    if (!t.totalOrder) {
+      totalBox.innerHTML = '';
+    } else {
+      totalBox.innerHTML =
+        '<div class="rk-sum">' +
+          '<div class="rk-sum-label">Total ' + escapeHtmlRnD(d.bulan || '') + '</div>' +
+          '<div class="rk-sum-omzet">' + fmt(t.omzet || 0) + '</div>' +
+          '<div class="rk-sum-detail">' +
+            (t.totalOrder || 0) + ' order · ' +
+            (t.orderPaid || 0) + ' paid · ' + (t.orderFree || 0) + ' free<br>' +
+            (t.qtyTotal || 0) + ' pcs terjual (' + (t.qtyPaid || 0) + ' paid / ' +
+            (t.qtyFree || 0) + ' free) dalam ' + (t.jumlahHari || 0) + ' hari aktif' +
+          '</div>' +
+        '</div>';
+    }
+  }
+
+  renderRekapHari();
+}
+
+// ── Render daftar kartu per hari (dipisah supaya buka/tutup kartu
+//    tidak perlu menggambar ulang dropdown & kartu total) ──
+function renderRekapHari() {
+  const body = document.getElementById('rekapBody');
+  if (!body) return;
+
+  const d = rekapData;
+  const hari = (d && d.hari) || [];
+
+  if (hari.length === 0) {
+    body.innerHTML = '<div class="rnd-empty">Belum ada pesanan di ' +
+      escapeHtmlRnD((d && d.bulan) || 'bulan ini') + '.</div>';
+    return;
+  }
+
+  // Hari paling baru dibuka otomatis saat pertama kali dilihat
+  if (Object.keys(rekapExpanded).length === 0) {
+    rekapExpanded[hari[0].tanggal] = true;
+  }
+
+  body.innerHTML = hari.map(function (h) {
+    const terbuka = !!rekapExpanded[h.tanggal];
+
+    let isi = '';
+    if (terbuka) {
+      // Kelompokkan produk hari itu
+      const grup = {};
+      (h.produk || []).forEach(function (p) {
+        const g = rekapGrupProduk(p.nama);
+        if (!grup[g]) grup[g] = [];
+        grup[g].push(p);
+      });
+
+      // Grup dikenal dulu (urutan tetap), lalu sisanya kalau ada
+      const urut = REKAP_URUTAN_GRUP.filter(function (g) { return grup[g]; });
+      Object.keys(grup).forEach(function (g) {
+        if (urut.indexOf(g) === -1) urut.push(g);
+      });
+
+      isi = '<div class="rk-day-body">' + urut.map(function (g) {
+        return '<div class="rk-group-title">' + escapeHtmlRnD(g) + '</div>' +
+          grup[g].map(function (p) {
+            return '<div class="rk-item">' +
+              '<div>' + escapeHtmlRnD(p.nama) +
+                (p.qtyFree > 0
+                  ? '<span class="rk-free">' + p.qtyPaid + ' paid · ' + p.qtyFree + ' free</span>'
+                  : '') +
+              '</div>' +
+              '<div class="rk-qty">' + (p.qty || 0) + '×</div>' +
+              '<div class="rk-rp">' + (p.omzet > 0 ? fmt(p.omzet) : '—') + '</div>' +
+            '</div>';
+          }).join('') ;
+      }).join('') + '</div>';
+    }
+
+    return '<div class="rk-day">' +
+      // Tanggal dari server selalu berformat "DD Mon YYYY", tapi apostrof
+      // tetap di-escape supaya string JS di dalam atribut ini tidak bisa
+      // patah kalau suatu saat formatnya berubah.
+      '<div class="rk-day-head" onclick="toggleRekapHari(\'' +
+        String(h.tanggal).replace(/'/g, "\\'") + '\')">' +
+        '<div>' +
+          '<div class="rk-date">' +
+            (h.hari ? escapeHtmlRnD(h.hari) + ', ' : '') + escapeHtmlRnD(h.tanggal) +
+            '<span class="rk-chev">' + (terbuka ? '▾' : '▸') + '</span>' +
+          '</div>' +
+          '<div class="rk-sub">' + (h.totalOrder || 0) + ' order · ' +
+            (h.qtyTotal || 0) + ' pcs · ' +
+            ((h.produk || []).length) + ' jenis</div>' +
+        '</div>' +
+        '<div style="text-align:right;">' +
+          '<div class="rk-omzet">' + fmt(h.omzet || 0) + '</div>' +
+          '<div class="rk-sub">' +
+            '<span class="rk-pill paid">' + (h.orderPaid || 0) + ' paid</span>' +
+            ((h.orderFree || 0) > 0
+              ? '<span class="rk-pill free">' + h.orderFree + ' free</span>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>' + isi +
+    '</div>';
+  }).join('');
+}
+
+// ─── 27 Okt 2026: SINKRON ANTAR-TAB ────────────────────────────
+// POS biasa & POS Android di browser yang sama berbagi penyimpanan. Dulu
+// tiap tab memegang salinan sendiri dan saling menimpa — order yang sudah
+// dihapus bisa hidup lagi, order baru dari tab lain bisa hilang. Sekarang
+// begitu tab lain mengubah data, tab ini ikut memuat ulang.
+function muatUlangDariPenyimpanan(kunci) {
+  if (!kunci || kunci === 'ls_orders_littlespoon' || kunci === LS_ORDER_DIHAPUS) {
+    try {
+      const d = JSON.parse(safeStorage.getItem('ls_orders_littlespoon') || '[]');
+      if (Array.isArray(d)) {
+        const dihapus = new Set(bacaDihapusLokal().map(x => String(x.id)));
+        orders = d.filter(o => o && !dihapus.has(String(o.id)));
+        renderLog();
+      }
+    } catch (e) { /* data rusak — biarkan yang di memori */ }
+  }
+  if (!kunci || kunci === 'ls_sync_queue') {
+    if (isSyncing) {
+      perluMuatUlangAntrian = true;     // dimuat setelah pengiriman selesai
+    } else {
+      try {
+        const q = JSON.parse(safeStorage.getItem('ls_sync_queue') || '[]');
+        if (Array.isArray(q)) syncQueue = q;
+      } catch (e) { /* abaikan */ }
+    }
+  }
+  if (!kunci || kunci === 'ls_pending_deletes') {
+    try {
+      const p = JSON.parse(safeStorage.getItem('ls_pending_deletes') || '[]');
+      if (Array.isArray(p)) pendingDeletes = p;
+    } catch (e) { /* abaikan */ }
+  }
+  updateSyncStatus();
+}
+
+window.addEventListener('storage', e => {
+  if (!e || !e.key) return;
+  if (['ls_orders_littlespoon', LS_ORDER_DIHAPUS, 'ls_sync_queue', 'ls_pending_deletes'].indexOf(e.key) !== -1) {
+    muatUlangDariPenyimpanan(e.key);
+  }
+});
+// Tab yang lama di belakang (HP sering membekukannya) memuat ulang saat dibuka lagi
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') muatUlangDariPenyimpanan();
+});
+
+// ─── 27 Okt 2026: PANGKAS ORDER LAMA DI PERANGKAT ─────────────────
+// Order yang sudah 🟢 Uploaded dan dibuat lebih dari 60 hari lalu dibuang
+// dari daftar di perangkat (datanya tetap aman di Google Sheets). Tanpa ini
+// daftar terus membesar → POS makin berat dan memori browser bisa penuh.
+const SIMPAN_ORDER_LOKAL_HARI = 60;
+
+function rapikanOrderLokal() {
+  const batas = SIMPAN_ORDER_LOKAL_HARI * 24 * 60 * 60 * 1000;
+  const dihapus = new Set(bacaDihapusLokal().map(d => String(d.id)));
+  const sebelum = orders.length;
+  orders = orders.filter(o => o && !dihapus.has(String(o.id)) &&
+    !(o.syncStatus === 'uploaded' && /\d{12,}/.test(String(o.id)) && umurOrderMs(o) > batas));
+  if (orders.length !== sebelum) {
+    saveOrders({ timpa: true });
+    console.log('Rapikan order lokal: ' + (sebelum - orders.length) + ' order dibuang dari perangkat ' +
+                '(sudah dihapus / sudah terupload > ' + SIMPAN_ORDER_LOKAL_HARI + ' hari).');
+  }
+}
+
+// ─── 27 Okt 2026: TINGGI HEADER ─────────────────────────────────
+// Logo dibuat besar → tinggi header berubah. Tinggi header + bar tanggal
+// diukur dan dipakai untuk tinggi area kasir (lihat --tinggi-atas di CSS),
+// jadi tombol "Tambah ke Laporan" tetap terlihat tanpa menggulir halaman.
+function aturTinggiAtas() {
+  const h = document.querySelector('header');
+  const d = document.getElementById('dateBar');
+  const t = (h ? h.offsetHeight : 0) + (d ? d.offsetHeight : 0);
+  if (t > 0) document.documentElement.style.setProperty('--tinggi-atas', t + 'px');
+}
+window.addEventListener('resize', aturTinggiAtas);
+(function () {
+  const img = document.getElementById('brandLogo');
+  if (img && !img.complete) img.addEventListener('load', aturTinggiAtas);
+})();
 
 // ─── INIT ──────────────────────────────────────────────────────
 document.getElementById('headerDate').textContent =
@@ -1870,12 +4079,17 @@ document.getElementById('orderDateInput').value = todayISO;
 try {
   applyHPPCache();   // pakai HPP tersimpan dulu (offline-safe)
   loadHPPLive();     // lalu ambil yang terbaru dari Inventory (async)
+  rapikanOrderLokal();   // 27 Okt 2026: buang order terhapus & order lama yang sudah aman di Sheets
   renderProducts();
   renderCart();
   renderLog();
   updateSyncStatus();
   checkCashierLogin();
   processSyncQueue();
+  renderRnDItems();   // v13: siapkan halaman R&D
+  renderRnDAddons();
+  aturTinggiAtas();   // 27 Okt 2026: logo besar → ukur tinggi header
+  setTimeout(() => cekVersiScript(false), 6000);   // 27 Okt 2026: URL script lama?
 } catch (err) {
   console.error('Init error:', err);
   alert('Terjadi error saat memuat aplikasi: ' + err.message);
